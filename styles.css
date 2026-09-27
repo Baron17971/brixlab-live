@@ -2512,3 +2512,30 @@ button{cursor:pointer}
     font-size:20px !important;
   }
 }
+
+/* Fix QR copy button overlap on mobile */
+@media(max-width:850px){
+  .compact-qr-body{
+    grid-template-columns:112px minmax(0,1fr) !important;
+    align-items:center !important;
+    gap:14px !important;
+  }
+  .compact-qr-card img{
+    width:112px !important;
+    height:112px !important;
+  }
+  .qr-meta{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:8px !important;
+    min-width:0;
+  }
+  .copy-link-btn{
+    position:static !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    white-space:nowrap !important;
+  }
+}
