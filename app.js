@@ -44,7 +44,7 @@ function studentGroupIdentity(s,state={}){
 }
 
 function lessonProgress(current,active,onStudent=false){
-  const labels=["פתיחה","ניסוי","בדיקת ידע","רפלקציה"];
+  const labels=["פתיחה","ניסוי","בדיקת ידע","מסקנות וחקר"];
   const steps=labels.map((label,i)=>{
     const unlocked=i<=current;
     const cls=['lesson-step',unlocked?'unlocked':'locked',i===active?'active':''].filter(Boolean).join(' ');
@@ -191,6 +191,98 @@ function projectionQuizHtml(qd){
   return '<section class="projection-section card projection-quiz-card">'+head+quizDistributionHtml(cur,item,total,true)+'<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div></section>';
 }
 
+function groupWorkFieldsMap(state){
+  return Object.fromEntries((state?.fields||[]).map(f=>[f.section+":"+f.field_key,f]));
+}
+
+function groupWorkField(section,key,label,placeholder,state,kind="textarea"){
+  const map=groupWorkFieldsMap(state);
+  const row=map[section+":"+key]||{};
+  const locked=!!row.recorded_by && !row.owned_by_me;
+  const owner=row.recorded_by_name||"חבר/ת קבוצה";
+  const tag=kind==="input"?"input":"textarea";
+  const value=esc(row.field_value||"");
+  const attr=tag==="input"?' value="'+value+'"':'';
+  const inner=tag==="textarea"?value:"";
+  return '<label class="group-work-field '+(locked?'locked-by-member':'')+'"><span>'+label+'</span>'+
+    '<'+tag+' id="gw_'+section+'_'+key+'" '+(locked?'disabled':'')+' placeholder="'+esc(placeholder)+'"'+attr+' onblur="saveGroupWorkField(\''+section+'\',\''+key+'\',this.value)">'+inner+'</'+tag+'>'+
+    (locked?'<small class="group-field-lock">נכתב על ידי '+esc(owner)+' · השדה נעול לעריכה</small>':row.recorded_by?'<small class="group-field-owner">נכתב על ידך · אפשר לעדכן</small>':'<small>השדה פנוי — כל אחד מחברי הקבוצה יכול לקחת עליו אחריות</small>')+
+  '</label>';
+}
+
+async function saveGroupWorkField(section,key,value){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  try{
+    await api("group_work_save",{student_id:s.student_id,section,field_key:key,field_value:value});
+  }catch(e){
+    if(String(e?.message||e).includes("locked")){
+      alert("חבר/ת קבוצה אחר/ת כבר שמר/ה את השדה הזה. הנתון לא נדרס.");
+    }
+  }
+}
+
+async function studentGroupWrap(renderFn){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  let gs;
+  try{gs=await api("group_work_state",{student_id:s.student_id})}catch(e){gs={fields:[]}}
+  renderFn(s,gs);
+}
+
+function renderGroupConclusions(s,gs){
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+
+    '<main class="group-work-main"><section class="card group-work-card"><span class="student-kicker">שלב מסכם · עבודה קבוצתית</span><h1>מה מצאנו?</h1><p class="group-work-lead">עוברים מהנתונים למסקנות. אפשר לחלק את הכתיבה בין חברי הקבוצה — כל שדה שנשמר נשאר שייך למי שמילא אותו ולא ניתן לדרוס אותו.</p>'+
+    '<div class="group-work-grid">'+
+      groupWorkField("conclusions","findings","1. התוצאות המרכזיות שלנו","מה בלט במדידות? אילו דגימות היו גבוהות או נמוכות במיוחד?",gs)+
+      groupWorkField("conclusions","comparison","2. מה אפשר להשוות בין הדגימות?","תארו דפוס, הבדל או קשר שראיתם בגרף העמודות.",gs)+
+      groupWorkField("conclusions","limitations","3. מה מגבלת המדידה?","זכרו: הרפרקטומטר מודד את כלל החומרים המומסים, ולכן ריכוז הסוכר שחישבנו הוא אומדן.",gs)+
+      groupWorkField("conclusions","recommendation","4. מסקנה או המלצה לצריכה נבונה","נסחו מסקנה אחת או המלצה אחת שעולה מן הנתונים שלכם.",gs)+
+    '</div><div class="group-work-actions"><button class="btn primary" onclick="studentGroupWrap(renderResearchPlan)">לתכנון חקר המשך</button></div></section></main></div>');
+}
+
+function renderResearchPlan(s,gs){
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+
+    '<main class="group-work-main"><section class="card group-work-card research-plan-card"><span class="student-kicker">חקר המשך · תכנון בלבד</span><h1>אם היינו ממשיכים לחקור...</h1><p class="group-work-lead">לא מבצעים ניסוי נוסף עכשיו. מתכננים חקר המשך אפשרי שמבוסס על מה שלמדתם בניסוי.</p>'+
+    '<div class="research-idea-strip"><strong>רעיונות אפשריים:</strong><span>דרגת הבשלה של פרי · מיץ טבעי לעומת משקה תעשייתי · השוואה בין זנים · השפעת דילול</span></div>'+
+    '<div class="group-work-grid">'+
+      groupWorkField("research_plan","question","1. שאלת החקר","למשל: כיצד דרגת ההבשלה של בננה משפיעה על ערך ה־Brix שלה?",gs)+
+      groupWorkField("research_plan","hypothesis","2. השערה","מה אתם מצפים שיקרה? נסחו גם הסבר קצר.",gs)+
+      groupWorkField("research_plan","independent","3. המשתנה הבלתי־תלוי","מה תשנו באופן מכוון?",gs,"input")+
+      groupWorkField("research_plan","dependent","4. המשתנה התלוי","מה תמדדו בעקבות השינוי?",gs,"input")+
+      groupWorkField("research_plan","controls","5. גורמים שנשמור קבועים","אילו תנאים צריכים להיות זהים בכל המדידות?",gs)+
+      groupWorkField("research_plan","equipment","6. חומרים וציוד","מה תצטרכו כדי לבצע את החקר?",gs)+
+      groupWorkField("research_plan","procedure","7. מהלך הניסוי","תארו בקצרה את שלבי העבודה המתוכננים.",gs)+
+      groupWorkField("research_plan","data_plan","8. אילו נתונים נאסוף ואיך נציג אותם?","איזו טבלה או איזה גרף יתאימו לתוצאות?",gs)+
+    '</div><div class="group-work-actions"><button class="btn ghost" onclick="studentGroupWrap(renderGroupConclusions)">חזרה למסקנות</button><button class="btn primary" onclick="showGroupWorkDone()">סיום התכנון</button></div></section></main></div>');
+}
+
+function showGroupWorkDone(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+'<main class="group-work-main"><section class="card group-work-card group-work-done"><div class="done-mark">✓</div><h1>סיימתם את העבודה הקבוצתית</h1><p>המסקנות ותכנון חקר ההמשך נשמרו לקבוצה. אפשר לחזור ולעדכן שדות שכתבתם בעצמכם.</p><div class="group-work-actions"><button class="btn ghost" onclick="studentGroupWrap(renderGroupConclusions)">צפייה במסקנות</button><button class="btn ghost" onclick="studentGroupWrap(renderResearchPlan)">צפייה בתכנון החקר</button></div></section></main></div>');
+}
+
+function teacherGroupWorkHtml(gwd){
+  if(!gwd)return "";
+  const conclusionKeys=["findings","comparison","limitations","recommendation"];
+  const researchKeys=["question","hypothesis","independent","dependent","controls","equipment","procedure","data_plan"];
+  const labels={
+    findings:"תוצאות מרכזיות",comparison:"השוואה בין דגימות",limitations:"מגבלת המדידה",recommendation:"מסקנה/המלצה",
+    question:"שאלת חקר",hypothesis:"השערה",independent:"בלתי־תלוי",dependent:"תלוי",controls:"גורמים קבועים",equipment:"ציוד",procedure:"מהלך",data_plan:"נתונים וייצוג"
+  };
+  const cards=(gwd.groups||[]).map(g=>{
+    const map=Object.fromEntries((g.fields||[]).map(f=>[f.section+":"+f.field_key,f]));
+    const cDone=conclusionKeys.filter(k=>String(map["conclusions:"+k]?.field_value||"").trim()).length;
+    const rDone=researchKeys.filter(k=>String(map["research_plan:"+k]?.field_value||"").trim()).length;
+    const detail=[...conclusionKeys.map(k=>["conclusions",k]),...researchKeys.map(k=>["research_plan",k])]
+      .filter(([sec,k])=>String(map[sec+":"+k]?.field_value||"").trim())
+      .map(([sec,k])=>'<details><summary>'+labels[k]+' <small>'+esc(map[sec+":"+k].recorded_by_name||"")+'</small></summary><p>'+esc(map[sec+":"+k].field_value)+'</p></details>').join("");
+    return '<article class="group-work-teacher-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><div class="group-student-names">'+((g.students||[]).map(esc).join(" · ")||"טרם הצטרפו")+'</div></div><strong>'+cDone+'/4 · '+rDone+'/8</strong></div><div class="group-work-status"><span class="'+(cDone===4?'done':'pending')+'">מסקנות '+cDone+'/4</span><span class="'+(rDone===8?'done':'pending')+'">חקר המשך '+rDone+'/8</span></div>'+detail+'</article>';
+  }).join("");
+  return '<section class="card teacher-group-work-section"><div class="section-title-row"><div><span class="student-kicker">שלב מסכם · קבוצתי</span><h2>מסקנות ותכנון חקר המשך</h2></div><p>כל שדה מציג גם מי מחברי הקבוצה כתב אותו.</p></div><div class="teacher-group-work-grid">'+cards+'</div></section>';
+}
+
 async function studentRoom(){
  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
  if(!s){go("student");return}
@@ -222,6 +314,11 @@ async function studentRoom(){
 
  if(state.current_stage===2){
    studentQuiz();
+   return;
+ }
+
+ if(state.current_stage===3){
+   studentGroupWrap(renderGroupConclusions);
    return;
  }
 
@@ -1195,8 +1292,12 @@ async function dashboard(){
  catch(e){shell('<div class="card"><div class="error">לא הצלחתי לטעון את הדשבורד.</div></div>');return}
  const s=data.session;
  let quizData=null;
+ let groupWorkData=null;
  if(Number(s.current_stage)===2){
    try{quizData=await api("quiz_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
+ }
+ if(Number(s.current_stage)===3){
+   try{groupWorkData=await api("group_work_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
  }
  const projecting=document.body.classList.contains("projection-mode");
  if(projecting){
@@ -1208,14 +1309,14 @@ async function dashboard(){
  const joinUrl=location.origin+location.pathname+'#student?code='+encodeURIComponent(s.class_code);
  window.__brixJoinUrl=joinUrl;
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
- const stageNames=["פתיחה","ניסוי עצמאי","בדיקת ידע","רפלקציה"];
+ const stageNames=["פתיחה","ניסוי עצמאי","בדיקת ידע","מסקנות וחקר"];
  const actionHtml=s.current_stage===0
    ? '<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>'
    : s.current_stage===1
    ? '<button class="btn primary" onclick="setStage(2)">פתחו את בדיקת הידע</button>'
    : s.current_stage===2
    ? '<span class="phase-done">התקדמות השאלות נשלטת בכרטיס בדיקת הידע</span>'
-   : '<span class="phase-done">השיעור בשלב הרפלקציה</span>';
+   : '<span class="phase-done">הכיתה עובדת על מסקנות ותכנון חקר המשך</span>';
 
  const calibrationRows=(data.calibration_summary||[]).map(r=>{
    const avg=r.average_brix==null?'—':Number(r.average_brix).toFixed(2);
@@ -1244,6 +1345,7 @@ async function dashboard(){
      '<section class="card class-calibration-card stage-section stage-section-calibration"><div class="section-title-row"><div><span class="student-kicker">שלב 2 · כיול</span><h2>ממוצעי הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה. כל שורה הופכת לנקודה בגרף הכיתתי.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+
      teacherSampleGraphsHtml(data)+
      (Number(s.current_stage)===2?teacherQuizHtml(quizData):'')+
+     (Number(s.current_stage)===3?teacherGroupWorkHtml(groupWorkData):'')+
      '<div class="card dashboard-summary progress-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
      '<section class="card groups-progress-card"><div class="section-title-row"><div><span class="student-kicker">בסוף · התקדמות הכיתה</span><h2>התקדמות הקבוצות</h2></div><p>כאן רואים מה כל קבוצה כבר ביצעה — לא מי מחובר.</p></div><div class="groups-progress-grid">'+groupCards+'</div></section>'+
    '</main>'+
