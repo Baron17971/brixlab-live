@@ -15,7 +15,7 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 
 function lessonProgress(current,active,onStudent=false){
   const labels=["פתיחה","ניסוי","סיכום","רפלקציה"];
-  return '<nav class="lesson-progress" aria-label="התקדמות בשיעור">'+labels.map((label,i)=>{
+  const steps=labels.map((label,i)=>{
     const unlocked=i<=current;
     const cls=['lesson-step',unlocked?'unlocked':'locked',i===active?'active':''].filter(Boolean).join(' ');
     const action=unlocked
@@ -23,8 +23,10 @@ function lessonProgress(current,active,onStudent=false){
           ? (i===0?' onclick="showStudentOpeningReview()"':i===1?' onclick="showStudentExperiment()"':'')
           : '')
       : '';
-    return '<button class="'+cls+'" '+(unlocked?'':'disabled')+action+'><span class="step-dot">'+(i+1)+'</span><span>'+label+'</span></button>';
-  }).join("")+'</nav>';
+    const status=i===active?'כעת':unlocked?'פתוח':'טרם נפתח';
+    return '<button class="'+cls+'" '+(unlocked?'':'disabled')+action+'><span class="step-dot">'+(i+1)+'</span><span class="step-copy"><strong>'+label+'</strong><small>'+status+'</small></span></button>';
+  }).join("");
+  return (onStudent?'':'<div class="progress-heading"><strong>התקדמות השיעור</strong><span>שלב שנפתח נשאר זמין</span></div>')+'<nav class="lesson-progress" aria-label="התקדמות בשיעור">'+steps+'</nav>';
 }
 
 function imageScreen(kind, desktop, mobile, overlay){
@@ -151,12 +153,6 @@ async function submitOpening(){
  }
 }
 
-const BrixPracticeQuestions=[
-  {value:0,y:84,choices:[0,4,8]},
-  {value:8,y:57,choices:[4,8,12]},
-  {value:15,y:33,choices:[10,15,20]}
-];
-
 function studentExperiment(s,state){
   const step=Number(state.experiment_step||0);
   if(step>=2){
@@ -164,39 +160,38 @@ function studentExperiment(s,state){
     return;
   }
   if(step===1){
-    renderBrixPractice(s,0,0);
+    renderBrixPractice(s);
     return;
   }
 
-  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(state.current_stage,1,true)+'<main class="experiment-intro"><section class="experiment-hero card"><span class="student-kicker">שלב 1 · מכירים את המכשיר</span><h1>רפרקטומטר — מה בעצם מודדים?</h1><p class="experiment-lead">הרפרקטומטר מודד את <strong>ריכוז כלל החומרים המומסים</strong> בתמיסה באמצעות שבירת אור. בתמיסות הסוכר שלנו ערך הקריאה יוצג ביחידות <strong>Brix</strong>.</p><div class="science-note"><strong>חשוב:</strong> המכשיר אינו “מזהה סוכר”. בפירות ובמשקאות הוא מגיב לכלל המומסים.</div></section><section class="how-grid"><article class="how-card"><b>1</b><h3>מניחים טיפות</h3><p>פותחים את המכסה ומניחים כמה טיפות על לוח הזכוכית.</p></article><article class="how-card"><b>2</b><h3>סוגרים</h3><p>סוגרים את המכסה כך שהנוזל יתפזר על פני המשטח.</p></article><article class="how-card"><b>3</b><h3>מול האור</h3><p>מביטים דרך העינית כשהמכשיר מופנה אל מקור אור.</p></article><article class="how-card"><b>4</b><h3>קוראים Brix</h3><p>קוראים את הערך במקום שבו נפגשים האזור הכחול והאזור הבהיר.</p></article></section><section class="cleaning-tip card"><div>🧻</div><div><strong>בין מדידה למדידה:</strong><br>מנגבים היטב את לוח הזכוכית לפני שמניחים דגימה חדשה.</div></section><button class="btn primary experiment-main-btn" onclick="startBrixPractice()">הבנתי — לתרגול קריאה</button></main></div>');
+  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(state.current_stage,1,true)+'<main class="experiment-intro"><section class="experiment-hero card"><span class="student-kicker">שלב 1 · מכירים את המכשיר</span><h1>רפרקטומטר — מה בעצם מודדים?</h1><p class="experiment-lead">הרפרקטומטר מודד את <strong>ריכוז כלל החומרים המומסים</strong> בתמיסה באמצעות שבירת אור. בתמיסות הסוכר שלנו ערך הקריאה יוצג ביחידות <strong>Brix</strong>.</p><div class="science-note"><strong>חשוב:</strong> המכשיר אינו “מזהה סוכר”. בפירות ובמשקאות הוא מגיב לכלל המומסים.</div></section><section class="how-grid"><article class="how-card"><b>1</b><h3>מניחים טיפות</h3><p>פותחים את המכסה ומניחים כמה טיפות על לוח הזכוכית.</p></article><article class="how-card"><b>2</b><h3>סוגרים</h3><p>סוגרים את המכסה כך שהנוזל יתפזר על פני המשטח.</p></article><article class="how-card"><b>3</b><h3>מול האור</h3><p>מביטים דרך העינית כשהמכשיר מופנה אל מקור אור.</p></article><article class="how-card"><b>4</b><h3>קוראים Brix</h3><p>קוראים את הערך במקום שבו נפגשים האזור הכחול והאזור הבהיר.</p></article></section><section class="cleaning-tip card"><div>🧻</div><div><strong>בין מדידה למדידה:</strong><br>מנגבים היטב את לוח הזכוכית לפני שמניחים דגימה חדשה.</div></section><button class="btn primary experiment-main-btn" onclick="startBrixPractice()">לתרגול עם המכשיר האמיתי</button></main></div>');
 }
 
 async function startBrixPractice(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   try{await api("update_student_progress",{student_id:s.student_id,experiment_step:1});}catch(e){}
-  renderBrixPractice(s,0,0);
+  renderBrixPractice(s);
 }
 
-function renderBrixPractice(s,index,score){
-  const q=BrixPracticeQuestions[index];
-  if(!q){finishBrixPractice(score);return}
-  window.__brixPracticeIndex=index;
-  window.__brixPracticeScore=score;
+function renderBrixPractice(s){
   const stateStage=Number(sessionStorage.getItem("brix_student_stage")||1);
-  shell('<div class="student-experiment-shell practice-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="practice-main"><section class="practice-card card"><div class="practice-top"><span class="student-kicker">שלב 2 · מתרגלים קריאה</span><strong>'+(index+1)+' / '+BrixPracticeQuestions.length+'</strong></div><h1>איזה ערך Brix מוצג?</h1><p>הסתכלו על קו הגבול בין הכחול ללבן ובחרו את הקריאה המתאימה.</p><div class="brix-viewer" style="--brix-y:'+q.y+'%"><div class="viewer-blue"></div><div class="viewer-boundary"></div><div class="viewer-scale"><span style="top:8%">20</span><span style="top:27%">15</span><span style="top:47%">10</span><span style="top:67%">5</span><span style="top:86%">0</span></div><div class="viewer-label">Brix</div></div><div class="practice-choices">'+q.choices.map(v=>'<button class="practice-choice" onclick="checkBrixAnswer('+v+')">'+v+'° Brix</button>').join("")+'</div><div id="practiceFeedback" class="practice-feedback"></div></section></main></div>');
+  shell('<div class="student-experiment-shell practice-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="practice-main"><section class="practice-card card real-device-card"><span class="student-kicker">שלב 2 · תרגול עם המכשיר האמיתי</span><h1>בדיקת מים</h1><p>קחו את הרפרקטומטר של הקבוצה. הניחו כמה טיפות מים, סגרו את המכסה, הביטו מול האור וקראו את ערך ה־Brix.</p><div class="real-device-steps"><span><b>1</b> טיפות מים</span><span><b>2</b> סוגרים</span><span><b>3</b> מול האור</span><span><b>4</b> קוראים</span></div><label class="real-reading"><span>מה קראתם?</span><div><input id="realBrixReading" type="number" inputmode="decimal" step="0.1" min="0" max="5" placeholder="0.0"><strong>°Brix</strong></div></label><div id="practiceFeedback" class="practice-feedback"></div><button class="btn primary experiment-main-btn" onclick="checkRealBrixReading()">בדיקת הקריאה</button><p class="micro-note">במים נקיים הקריאה צפויה להיות סביב 0° Brix. סטייה קטנה אפשרית; אם הקריאה גבוהה, נקו את המשטח ומדדו שוב.</p></section></main></div>');
 }
 
-function checkBrixAnswer(answer){
-  const index=window.__brixPracticeIndex||0;
-  const score=window.__brixPracticeScore||0;
-  const q=BrixPracticeQuestions[index];
+function checkRealBrixReading(){
+  const input=document.getElementById("realBrixReading");
   const fb=document.getElementById("practiceFeedback");
-  if(answer===q.value){
-    fb.innerHTML='<div class="feedback-good">נכון ✓ ממשיכים לקריאה הבאה.</div>';
-    setTimeout(()=>renderBrixPractice(JSON.parse(localStorage.getItem("brix_student")||"null"),index+1,score+1),650);
+  const value=Number(input?.value);
+  if(!Number.isFinite(value)){
+    fb.innerHTML='<div class="feedback-try">הזינו את הערך שקראתם במכשיר.</div>';
+    return;
+  }
+  if(value>=0 && value<=1){
+    fb.innerHTML='<div class="feedback-good">מצוין ✓ הקריאה מתאימה למים. ממשיכים לכיול.</div>';
+    setTimeout(()=>finishBrixPractice(1),700);
   }else{
-    fb.innerHTML='<div class="feedback-try">כמעט. הסתכלו שוב על קו הגבול ונסו פעם נוספת.</div>';
+    fb.innerHTML='<div class="feedback-try">הקריאה גבוהה מהצפוי למים. נקו את משטח הזכוכית, הניחו מים מחדש ומדדו שוב.</div>';
   }
 }
 
@@ -355,7 +350,7 @@ async function dashboard(){
  window.__brixJoinUrl=joinUrl;
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
  const projecting=document.body.classList.contains("projection-mode");
- shell('<div class="topbar"><button class="btn ghost top-exit" onclick="localStorage.removeItem(\'brix_teacher\');document.body.classList.remove(\'projection-mode\');go(\'home\')">יציאה</button><div class="top-brand">'+brand()+'</div><button class="btn projection-btn" onclick="toggleProjection()">'+(projecting?'יציאה מהקרנה':'מצב הקרנה')+'</button></div>'+lessonProgress(s.current_stage,s.current_stage,false)+'<div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><div class="qr-row"><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><button id="copyJoinLinkBtn" class="copy-link-btn" onclick="copyJoinLink(window.__brixJoinUrl)">העתקת קישור</button></div><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card phase-card"><h3>מהלך השיעור</h3><div class="phase-grid">'+["פתיחה","ניסוי עצמאי","סיכום כיתתי","רפלקציה"].map((x,i)=>'<div class="phase '+(i===s.current_stage?'active':i<s.current_stage?'open':'')+'"><span class="phase-num">'+(i+1)+'</span><span>'+x+'</span></div>').join("")+'</div><div class="experiment-flow"><strong>בתוך הניסוי:</strong><span>רפרקטומטר</span><span>כיול</span><span>חקר</span><span>השוואה</span><span>תכן</span></div><div class="phase-actions">'+(s.current_stage===0?'<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>':s.current_stage===1?'<button class="btn primary" onclick="setStage(2)">עברו לסיכום</button>':s.current_stage===2?'<button class="btn primary" onclick="setStage(3)">פתחו רפלקציה</button>':'<span class="phase-done">השיעור בשלב הרפלקציה</span>')+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · '+esc(s.teacher_name||"מורה")+'</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div>'+'<div class="card opening-live-card"><div class="opening-live-head"><div><span class="student-kicker">פתיחה כיתתית</span><h2>סקר + ניחוש מתוק</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div><p class="opening-note">אין חשיפת תשובות באפליקציה בשלב זה — הדיון והעובדות נשארים במליאה דרך המצגת.</p></div>'+'<div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>',s.current_stage===0?"teacher-opening-shell":"");
+ shell('<div class="topbar"><button class="btn ghost top-exit" onclick="localStorage.removeItem(\'brix_teacher\');document.body.classList.remove(\'projection-mode\');go(\'home\')">יציאה</button><div class="top-brand">'+brand()+'</div><button class="btn projection-btn" onclick="toggleProjection()">'+(projecting?'יציאה מהקרנה':'מצב הקרנה')+'</button></div>'+lessonProgress(s.current_stage,s.current_stage,false)+'<div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><div class="qr-row"><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><button id="copyJoinLinkBtn" class="copy-link-btn" onclick="copyJoinLink(window.__brixJoinUrl)">העתקת קישור</button></div><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card phase-card"><h3>מהלך השיעור</h3><div class="phase-grid">'+["פתיחה","ניסוי עצמאי","סיכום כיתתי","רפלקציה"].map((x,i)=>'<div class="phase '+(i===s.current_stage?'active':i<s.current_stage?'open':'')+'"><span class="phase-num">'+(i+1)+'</span><span>'+x+'</span></div>').join("")+'</div><div class="experiment-flow"><strong>בתוך הניסוי:</strong><span>רפרקטומטר</span><span>כיול</span><span>חקר</span><span>השוואה</span><span>תכן</span></div><div class="phase-actions">'+(s.current_stage===0?'<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>':s.current_stage===1?'<button class="btn primary" onclick="setStage(2)">עברו לסיכום</button>':s.current_stage===2?'<button class="btn primary" onclick="setStage(3)">פתחו רפלקציה</button>':'<span class="phase-done">השיעור בשלב הרפלקציה</span>')+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · '+esc(s.teacher_name||"מורה")+'</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div>'+'<div class="card opening-live-card"><div class="opening-live-head"><div><span class="student-kicker">פתיחה כיתתית</span><h2>סקר + ניחוש מתוק</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div><p class="opening-note">אין חשיפת תשובות באפליקציה בשלב זה — הדיון והעובדות נשארים במליאה דרך המצגת.</p></div>'+'<div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>',"teacher-dashboard-shell "+(s.current_stage===0?"teacher-opening-shell":""));
  clearTimeout(window.__brixTimer);
  window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")) dashboard();},5000);
 }
