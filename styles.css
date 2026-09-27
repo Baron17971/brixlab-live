@@ -1117,3 +1117,47 @@ button{cursor:pointer}
       url("/public/screens/bg-mobile.png") center top / cover fixed no-repeat !important;
   }
 }
+
+/* Student opening logo: larger, centered and more prominent */
+.student-opening-head{
+  position:relative;
+  min-height:118px;
+  justify-content:flex-start;
+}
+.student-opening-head .brand-image{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:auto;
+  z-index:2;
+}
+.student-opening-head .brand-image img{
+  width:min(430px,58vw) !important;
+  max-height:118px !important;
+  filter:drop-shadow(0 7px 14px rgba(7,58,78,.22));
+}
+.student-opening-head>div:last-child{
+  position:relative;
+  z-index:3;
+  margin-inline-start:auto;
+}
+
+@media(max-width:850px){
+  .student-opening-head{
+    min-height:132px;
+    justify-content:flex-start;
+  }
+  .student-opening-head .brand-image{
+    top:54%;
+  }
+  .student-opening-head .brand-image img{
+    width:min(350px,70vw) !important;
+    max-height:108px !important;
+    filter:drop-shadow(0 8px 16px rgba(7,58,78,.24));
+  }
+  .student-opening-head>div:last-child{
+    margin-inline-start:0;
+    align-items:flex-start;
+  }
+}
