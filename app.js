@@ -247,7 +247,7 @@ async function saveCalibration(){
 function renderCalibrationDone(s,state){
   const stateStage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
   window.__brixModelState=state;
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3><button onclick="answerVariable(this,&quot;x&quot;,&quot;ריכוז הסוכר בתמיסה&quot;,true)">ריכוז הסוכר בתמיסה</button><button onclick="answerVariable(this,&quot;x&quot;,&quot;ריכוז המומסים ב־Brix&quot;,false)">ריכוז המומסים ב־Brix</button></div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3><button onclick="answerVariable(this,&quot;y&quot;,&quot;ריכוז המומסים הנמדד ברפרקטומטר&quot;,true)">ריכוז המומסים הנמדד ברפרקטומטר</button><button onclick="answerVariable(this,&quot;y&quot;,&quot;ריכוז הסוכר שהכנו&quot;,false)">ריכוז הסוכר שהכנו</button></div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3><button onclick="answerVariable(this,&quot;xu&quot;,&quot;גרם סוכר ל־100 מ״ל&quot;,true)">גרם סוכר ל־100 מ״ל</button><button onclick="answerVariable(this,&quot;xu&quot;,&quot;°Brix&quot;,false)">°Brix</button></div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3><button onclick="answerVariable(this,&quot;yu&quot;,&quot;°Brix&quot;,true)">°Brix</button><button onclick="answerVariable(this,&quot;yu&quot;,&quot;גרם/100 מ״ל&quot;,false)">גרם/100 מ״ל</button></div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showAxisBuilder()" disabled>ממשיכים לבניית הצירים</button></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3><button onclick="answerVariable(this,&quot;x&quot;,&quot;ריכוז הסוכר בתמיסה&quot;,true)">ריכוז הסוכר בתמיסה</button><button onclick="answerVariable(this,&quot;x&quot;,&quot;ריכוז המומסים ב־Brix&quot;,false)">ריכוז המומסים ב־Brix</button></div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3><button onclick="answerVariable(this,&quot;y&quot;,&quot;ריכוז המומסים הנמדד ברפרקטומטר&quot;,true)">ריכוז המומסים הנמדד ברפרקטומטר</button><button onclick="answerVariable(this,&quot;y&quot;,&quot;ריכוז הסוכר שהכנו&quot;,false)">ריכוז הסוכר שהכנו</button></div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3><button onclick="answerVariable(this,&quot;xu&quot;,&quot;גרם סוכר ל־100 מ״ל&quot;,true)">גרם סוכר ל־100 מ״ל</button><button onclick="answerVariable(this,&quot;xu&quot;,&quot;°Brix&quot;,false)">°Brix</button></div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3><button onclick="answerVariable(this,&quot;yu&quot;,&quot;°Brix&quot;,true)">°Brix</button><button onclick="answerVariable(this,&quot;yu&quot;,&quot;גרם/100 מ״ל&quot;,false)">גרם/100 מ״ל</button></div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showCalibrationTable()" disabled>הצגת טבלת הנתונים</button></section></main></div>');
 }
 
 window.__variableAnswers={};
@@ -263,12 +263,24 @@ function answerVariable(btn,key,value,correct){
   if(msg) msg.innerHTML=correct?'<div class="feedback-good compact-feedback">נכון ✓</div>':'<div class="feedback-try compact-feedback">נסו שוב — חשבו מה אנחנו משנים ומה אנחנו מודדים.</div>';
 }
 
+
+function showCalibrationTable(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  const state=window.__brixModelState||{};
+  const stateStage=Number(state.current_stage ?? 1);
+  const rows=(state.calibration||[])
+    .slice()
+    .sort((a,b)=>Number(a.solution_number)-Number(b.solution_number));
+
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 2</span><h1>הנתונים של הקבוצה שלכם</h1><p class="model-lead">לפני שבונים גרף, מרכזים את המדידות בטבלה ומוודאים איזה משתנה הוא בלתי־תלוי ואיזה משתנה תלוי.</p><div class="student-calibration-table-wrap"><table class="student-calibration-table"><thead><tr><th>תמיסה</th><th><span class="var-badge independent">משתנה בלתי־תלוי</span><strong>ריכוז הסוכר</strong><small>גרם סוכר ל־100 מ״ל</small></th><th><span class="var-badge dependent">משתנה תלוי</span><strong>ריכוז המומסים</strong><small>°Brix</small></th></tr></thead><tbody>'+rows.map(r=>'<tr><td data-label="תמיסה"><b>תמיסה '+r.solution_number+'</b></td><td data-label="ריכוז הסוכר">'+Number(r.sugar_concentration).toFixed(2)+'</td><td data-label="°Brix">'+Number(r.brix_value).toFixed(1)+'</td></tr>').join('')+'</tbody></table></div><div class="science-note"><strong>שימו לב:</strong> הגרף הבא ייבנה מהמדידות של הקבוצה שלכם בלבד. הנתונים הכיתתיים נשמרים למסך המורה.</div><button class="btn primary experiment-main-btn" onclick="showAxisBuilder()">בניית הגרף</button></section></main></div>');
+}
+
 function showAxisBuilder(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   const state=window.__brixModelState||{};
   const stateStage=Number(state.current_stage ?? 1);
   window.__axisPlacement={x:null,y:null};
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 2</span><h1>מקמו את המשתנים על הצירים</h1><p class="model-lead">גררו כל כרטיס לציר המתאים. במובייל אפשר גם להקיש על הכרטיס ואז על הציר.</p><div class="axis-chips"><button class="axis-chip" draggable="true" data-var="concentration" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז הסוכר<br><small>גרם/100 מ״ל</small></button><button class="axis-chip" draggable="true" data-var="brix" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז המומסים<br><small>°Brix</small></button></div><div class="axis-board"><div class="axis-zone y-zone" data-axis="y" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;y&quot;)" onclick="axisTapDrop(&quot;y&quot;)"><span>ציר Y</span><strong id="axisYLabel">הניחו כאן משתנה</strong></div><div class="plot-placeholder"><div class="fake-y"></div><div class="fake-x"></div><span>כאן ייבנה הגרף</span></div><div class="axis-zone x-zone" data-axis="x" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;x&quot;)" onclick="axisTapDrop(&quot;x&quot;)"><span>ציר X</span><strong id="axisXLabel">הניחו כאן משתנה</strong></div></div><div id="axisMsg"></div><button id="buildPointsBtn" class="btn primary experiment-main-btn" onclick="showCalibrationPoints()" disabled>בנו את נקודות הכיול</button></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 3</span><h1>מקמו את המשתנים על הצירים</h1><p class="model-lead">גררו כל כרטיס לציר המתאים. במובייל אפשר גם להקיש על הכרטיס ואז על הציר.</p><div class="axis-chips"><button class="axis-chip" draggable="true" data-var="concentration" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז הסוכר<br><small>גרם/100 מ״ל</small></button><button class="axis-chip" draggable="true" data-var="brix" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז המומסים<br><small>°Brix</small></button></div><div class="axis-board"><div class="axis-zone y-zone" data-axis="y" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;y&quot;)" onclick="axisTapDrop(&quot;y&quot;)"><span>ציר Y</span><strong id="axisYLabel">הניחו כאן משתנה</strong></div><div class="plot-placeholder"><div class="fake-y"></div><div class="fake-x"></div><span>כאן ייבנה הגרף</span></div><div class="axis-zone x-zone" data-axis="x" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;x&quot;)" onclick="axisTapDrop(&quot;x&quot;)"><span>ציר X</span><strong id="axisXLabel">הניחו כאן משתנה</strong></div></div><div id="axisMsg"></div><button id="buildPointsBtn" class="btn primary experiment-main-btn" onclick="showCalibrationPoints()" disabled>בנו את נקודות הכיול</button></section></main></div>');
 }
 
 window.__selectedAxisChip=null;
@@ -297,10 +309,10 @@ function placeAxis(variable,axis){
   if(msg) msg.innerHTML=ok?'<div class="feedback-good">מעולה. הצירים מוכנים ✓</div>':'';
 }
 
-function classCalibrationPoints(){
-  const rows=(window.__brixModelState?.class_calibration||[])
-    .filter(r=>r.average_concentration!=null && r.average_brix!=null)
-    .map(r=>({x:Number(r.average_concentration),y:Number(r.average_brix),n:Number(r.solution_number),groups:Number(r.reported_groups||0)}));
+function groupCalibrationPoints(){
+  const rows=(window.__brixModelState?.calibration||[])
+    .filter(r=>r.sugar_concentration!=null && r.brix_value!=null)
+    .map(r=>({x:Number(r.sugar_concentration),y:Number(r.brix_value),n:Number(r.solution_number)}));
   return rows.sort((a,b)=>a.x-b.x);
 }
 
@@ -308,13 +320,13 @@ function showCalibrationPoints(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   const state=window.__brixModelState||{};
   const stateStage=Number(state.current_stage ?? 1);
-  const pts=classCalibrationPoints();
+  const pts=groupCalibrationPoints();
   if(pts.length<2){
-    shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>עוד רגע בונים את הגרף</h1><p class="model-lead">עדיין אין מספיק נתונים כיתתיים כדי ליצור נקודות כיול. הנתונים יתעדכנו כשקבוצות נוספות ישמרו את המדידות.</p><button class="btn primary" onclick="refreshModelState()">בדקו שוב</button></section></main></div>');
+    shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>עוד רגע בונים את הגרף</h1><p class="model-lead">אין עדיין מספיק מדידות של הקבוצה כדי ליצור גרף כיול. חזרו למדידות והשלימו את הנתונים.</p><button class="btn primary" onclick="renderCalibration(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixModelState)">חזרה למדידות</button></section></main></div>');
     return;
   }
   const graph=calibrationSvg(pts,false,false);
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 3</span><h1>הנקודות נוצרות מהמדידות של הכיתה</h1><p class="model-lead">כל נקודה מחברת בין ריכוז סוכר ידוע לבין ממוצע ה־Brix שנמדד עבורו.</p><div class="class-data-strip">'+pts.map(p=>'<span><b>'+p.x+'</b> g/100mL → <b>'+p.y+'</b> °Brix</span>').join('')+'</div><div id="calibrationGraph" class="calibration-graph">'+graph+'</div><div class="pattern-question"><h3>מה אתם מזהים?</h3><div class="pattern-options"><button onclick="patternAnswer(this,true)">ככל שריכוז הסוכר עולה, גם ערך ה־Brix עולה</button><button onclick="patternAnswer(this,false)">אין קשר בין המשתנים</button><button onclick="patternAnswer(this,false)">ככל שריכוז הסוכר עולה, ערך ה־Brix יורד</button></div><div id="patternMsg"></div></div><button id="trendBtn" class="btn primary experiment-main-btn" onclick="addTrendLine()" disabled>הוספת קו מגמה</button><button id="equationBtn" class="btn ghost experiment-main-btn" onclick="showTrendEquation()" disabled>הצגת משוואת הישר</button><div id="equationBox"></div></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 4</span><h1>גרף הכיול של הקבוצה שלכם</h1><p class="model-lead">כל נקודה מחברת בין ריכוז הסוכר שהכנתם לבין ערך ה־Brix שאתם מדדתם.</p><div class="class-data-strip group-data-strip">'+pts.map(p=>'<span><b>'+p.x+'</b> g/100mL → <b>'+p.y+'</b> °Brix</span>').join('')+'</div><div id="calibrationGraph" class="calibration-graph">'+graph+'</div><div class="pattern-question"><h3>מה אתם מזהים?</h3><div class="pattern-options"><button onclick="patternAnswer(this,true)">ככל שריכוז הסוכר עולה, גם ערך ה־Brix עולה</button><button onclick="patternAnswer(this,false)">אין קשר בין המשתנים</button><button onclick="patternAnswer(this,false)">ככל שריכוז הסוכר עולה, ערך ה־Brix יורד</button></div><div id="patternMsg"></div></div><button id="trendBtn" class="btn primary experiment-main-btn" onclick="addTrendLine()" disabled>הוספת קו מגמה</button><button id="equationBtn" class="btn ghost experiment-main-btn" onclick="showTrendEquation()" disabled>הצגת משוואת הישר</button><div id="equationBox"></div></section></main></div>');
   window.__modelPoints=pts;
 }
 async function refreshModelState(){
@@ -365,9 +377,9 @@ async function startSampleStage(){
 }
 
 function sampleModelFromState(state){
-  const pts=(state?.class_calibration||[])
-    .filter(r=>r.average_concentration!=null && r.average_brix!=null)
-    .map(r=>({x:Number(r.average_concentration),y:Number(r.average_brix)}));
+  const pts=(state?.calibration||[])
+    .filter(r=>r.sugar_concentration!=null && r.brix_value!=null)
+    .map(r=>({x:Number(r.sugar_concentration),y:Number(r.brix_value)}));
   return pts.length>=2?linearModel(pts):null;
 }
 
@@ -377,7 +389,7 @@ function renderSampleStage(s,state){
   const saved=Object.fromEntries((state?.samples||[]).map(x=>[Number(x.sample_slot),x]));
   const model=sampleModelFromState(state);
   const modelBox=model
-    ? '<div class="sample-model-strip"><span>משוואת הכיול הכיתתית</span><strong>y = '+model.a.toFixed(2)+'x '+(model.b<0?'−':'+')+' '+Math.abs(model.b).toFixed(2)+'</strong><small>x = ריכוז סוכר · y = °Brix</small></div>'
+    ? '<div class="sample-model-strip"><span>משוואת הכיול של הקבוצה</span><strong>y = '+model.a.toFixed(2)+'x '+(model.b<0?'−':'+')+' '+Math.abs(model.b).toFixed(2)+'</strong><small>x = ריכוז סוכר · y = °Brix</small></div>'
     : '<div class="feedback-try">עדיין אין מספיק נתוני כיול כיתתיים לחישוב ריכוז הסוכר.</div>';
 
   shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים משקאות לא ידועים</h1><p class="samples-lead">לפניכם שישה מקומות לדגימות. כתבו בכל שורה את שם המשקה שקיבלתם, מדדו °Brix, והאפליקציה תחשב בעזרת משוואת הכיול את ריכוז הסוכר המשוער.</p>'+modelBox+'<div class="sample-grid">'+[1,2,3,4,5,6].map(n=>{const row=saved[n]||{};return '<article class="sample-card"><div class="sample-title"><strong>דגימה '+n+'</strong><span>מלאו רק אם קיבלתם דגימה</span></div><label><span>שם המשקה</span><input id="sample_name_'+n+'" value="'+esc(row.sample_name??"")+'" placeholder="למשל: מיץ תפוזים / קולה"></label><label><span>מדידת Brix</span><div class="sample-brix-input"><input id="sample_brix_'+n+'" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(row.brix_value??"")+'" placeholder="0.0" oninput="updateSampleEstimate('+n+')"><strong>°Brix</strong></div></label><div id="sample_est_'+n+'" class="sample-estimate">'+(row.estimated_sugar!=null?'<span>ריכוז סוכר משוער</span><strong>'+Number(row.estimated_sugar).toFixed(2)+' g/100mL</strong>':'<span>החישוב יופיע כאן</span>')+'</div></article>'}).join("")+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות</button></section></main></div>');
@@ -403,7 +415,7 @@ async function saveSamples(){
   const model=sampleModelFromState(window.__brixSampleState||{});
   const msg=document.getElementById('samplesMsg');
   if(!model || model.a===0){
-    msg.innerHTML='<div class="feedback-try">אין עדיין משוואת כיול כיתתית תקינה.</div>';
+    msg.innerHTML='<div class="feedback-try">אין עדיין משוואת כיול תקינה של הקבוצה.</div>';
     return;
   }
   const samples=[];
