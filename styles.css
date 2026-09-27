@@ -3578,3 +3578,100 @@ button{cursor:pointer}
     order:91 !important;
   }
 }
+
+/* Continuous student experiment progress */
+.student-experiment-progress{
+  position:relative;
+  max-width:980px;
+  margin:8px auto 16px;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  align-items:start;
+}
+.student-exp-line{
+  position:absolute;
+  top:17px;
+  right:10%;
+  left:10%;
+  height:3px;
+  background:#dce8ea;
+  z-index:0;
+}
+.student-exp-step{
+  position:relative;
+  z-index:1;
+  display:grid;
+  justify-items:center;
+  gap:6px;
+  text-align:center;
+}
+.student-exp-step span{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  border:2px solid #c9dadd;
+  background:#fff;
+  color:#7d9297;
+  font-size:12px;
+  font-weight:900;
+}
+.student-exp-step b{
+  font-size:11px;
+  color:#7a8e93;
+  line-height:1.2;
+}
+.student-exp-step.done span{
+  background:#e8f7ef;
+  border-color:#9fd4b7;
+  color:#27714f;
+}
+.student-exp-step.done b{
+  color:#54746a;
+}
+.student-exp-step.current span{
+  background:var(--navy);
+  border-color:var(--navy);
+  color:#fff;
+  box-shadow:0 0 0 5px rgba(23,57,95,.10);
+}
+.student-exp-step.current b{
+  color:var(--navy);
+  font-weight:900;
+}
+.equation-next-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+@media(max-width:850px){
+  .student-experiment-progress{
+    margin:4px 6px 12px;
+    gap:3px;
+  }
+  .student-exp-line{
+    top:14px;
+    right:9%;
+    left:9%;
+    height:2px;
+  }
+  .student-exp-step{
+    gap:4px;
+  }
+  .student-exp-step span{
+    width:28px;
+    height:28px;
+    font-size:10px;
+  }
+  .student-exp-step b{
+    font-size:8px;
+    line-height:1.15;
+  }
+  .equation-next-actions{
+    grid-template-columns:1fr;
+  }
+}
