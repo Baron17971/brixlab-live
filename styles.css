@@ -1599,3 +1599,46 @@ button{cursor:pointer}
     grid-template-columns:repeat(2,1fr);
   }
 }
+
+/* Fix mobile teacher header spacing: keep projection control below logo */
+@media(max-width:850px){
+  .teacher-opening-shell .topbar{
+    min-height:0 !important;
+    padding:14px 14px 16px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:10px !important;
+  }
+  .teacher-opening-shell .top-brand{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+  .teacher-opening-shell .topbar .brand-image img{
+    width:min(500px,82vw) !important;
+    max-height:132px !important;
+  }
+  .teacher-opening-shell .projection-btn{
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+    width:auto !important;
+    min-width:170px !important;
+    padding:10px 24px !important;
+    margin:0 auto !important;
+    border-radius:999px !important;
+  }
+  .teacher-opening-shell .top-exit{
+    position:absolute !important;
+    top:12px !important;
+    left:12px !important;
+    bottom:auto !important;
+    transform:none !important;
+    width:auto !important;
+    min-width:auto !important;
+    padding:7px 10px !important;
+  }
+}
