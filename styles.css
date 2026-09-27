@@ -391,3 +391,13 @@ button{cursor:pointer}
     object-position:center top;
   }
 }
+
+/* Nudge mobile overlay cards slightly upward */
+@media(max-width:850px){
+  .teacher-auth-card{margin-top:34vh}
+  .teacher-menu-card{margin-top:37vh}
+  .new-session-card{margin-top:36vh}
+  .waiting-card{margin-top:37vh}
+  .student-login-screen .auth-card{margin-top:36vh}
+  .existing-session-screen .auth-card{margin-top:36vh}
+}
