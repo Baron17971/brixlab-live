@@ -3708,3 +3708,25 @@ button{cursor:pointer}
   font-size:11px;
   opacity:.86;
 }
+
+/* Mobile beverage bar-chart fit */
+@media(max-width:850px){
+  .sample-bar-chart{
+    overflow:hidden !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  .sample-bar-chart svg{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    height:auto !important;
+    display:block !important;
+  }
+  .bar-chart-card,
+  .teacher-group-sample-graph,
+  .teacher-summary-sample-graph{
+    min-width:0 !important;
+    overflow:hidden !important;
+  }
+}
