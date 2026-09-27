@@ -20,7 +20,7 @@ function lessonProgress(current,active,onStudent=false){
     const cls=['lesson-step',unlocked?'unlocked':'locked',i===active?'active':''].filter(Boolean).join(' ');
     const action=unlocked
       ? (onStudent
-          ? (i===0?' onclick="showStudentOpeningReview()"':i===1?' onclick="studentRoom()"':'')
+          ? (i===0?' onclick="showStudentOpeningReview()"':i===1?' onclick="showStudentExperiment()"':'')
           : '')
       : '';
     return '<button class="'+cls+'" '+(unlocked?'':'disabled')+action+'><span class="step-dot">'+(i+1)+'</span><span>'+label+'</span></button>';
@@ -92,6 +92,18 @@ async function studentRoom(){
  shell('<div class="student-lab-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(state.current_stage,state.current_stage,true)+'<div class="card student-next-card"><span class="student-kicker">השלב הכיתתי הבא</span><h1>ממתינים להנחיית המורה</h1><p>הניסוי העצמאי הסתיים. כל שלב שכבר נפתח נשאר זמין בסרגל ההתקדמות.</p></div></div>');
 }
 
+async function showStudentExperiment(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  let state;
+  try{
+    state=await api("student_state",{student_id:s.student_id});
+    sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
+  }catch(e){return}
+  if(Number(state.current_stage||0)<1)return;
+  studentExperiment(s,state);
+}
+
 async function showStudentOpeningReview(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
@@ -101,7 +113,7 @@ async function showStudentOpeningReview(){
   const a=state.opening_answer||{};
   const labels={daily:"פעם ביום",weekly:"פעם בשבוע",events:"רק באירועים מיוחדים",never:"לא שותה ממותק"};
   const g=a.guesses||{};
-  shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header>'+lessonProgress(state.current_stage,0,true)+'<main class="student-opening-main review-main"><section class="opening-card review-card"><span class="student-kicker">שלב פתיחה · נשאר פתוח</span><h1>התשובות שלכם</h1><div class="review-answer"><span>תדירות שתיית משקאות ממותקים</span><strong>'+esc(labels[a.survey_option]||"—")+'</strong></div><div class="review-guesses"><h3>הניחושים שלכם</h3><div><span>קולה <b>'+esc(g.cola??"—")+'</b></span><span>תפוזים <b>'+esc(g.orange??"—")+'</b></span><span>תה קר <b>'+esc(g.iced_tea??"—")+'</b></span><span>אנרגיה <b>'+esc(g.energy??"—")+'</b></span></div></div>'+(state.current_stage>=1?'<button class="btn primary" onclick="studentRoom()">חזרה לניסוי</button>':'')+'</section></main></div>');
+  shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header>'+lessonProgress(state.current_stage,0,true)+'<main class="student-opening-main review-main"><section class="opening-card review-card"><span class="student-kicker">שלב פתיחה · נשאר פתוח</span><h1>התשובות שלכם</h1><div class="review-answer"><span>תדירות שתיית משקאות ממותקים</span><strong>'+esc(labels[a.survey_option]||"—")+'</strong></div><div class="review-guesses"><h3>הניחושים שלכם</h3><div><span>קולה <b>'+esc(g.cola??"—")+'</b></span><span>תפוזים <b>'+esc(g.orange??"—")+'</b></span><span>תה קר <b>'+esc(g.iced_tea??"—")+'</b></span><span>אנרגיה <b>'+esc(g.energy??"—")+'</b></span></div></div>'+(state.current_stage>=1?'<button class="btn primary" onclick="showStudentExperiment()">חזרה לניסוי</button>':'')+'</section></main></div>');
 }
 
 function studentOpening(s){
