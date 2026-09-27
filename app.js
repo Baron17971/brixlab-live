@@ -8,7 +8,7 @@ async function api(action,payload={}){
   return j.data;
 }
 function shell(content,cls=""){root.innerHTML='<div class="shell '+cls+'">'+content+'</div>'}
-function brand(){return '<div class="brand brand-image"><img src="/public/screens/brix-loho.png" alt="BrixLab - מתוק ומדויק"></div>'}
+function brand(){return '<div class="brand brand-image"><img src="/public/screens/brix-logo.png" alt="BrixLab - מתוק ומדויק"></div>'}
 function go(view){location.hash=view}
 window.addEventListener("hashchange",router);
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
