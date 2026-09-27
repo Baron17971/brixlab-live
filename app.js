@@ -510,6 +510,21 @@ function renderSampleStage(s,state){
   shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים משקאות לא ידועים</h1><p class="samples-lead">בשתי הדגימות הראשונות אתם מבצעים את החישוב בעצמכם. אחרי שתראו שהבנתם כיצד משתמשים במשוואת הכיול, האפליקציה תחשב עבורכם את יתר הדגימות.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות</button></section></main></div>');
 }
 
+function unlockAutoSamplesInPlace(){
+  [3,4,5,6].forEach(n=>{
+    const card=document.getElementById('sample_name_'+n)?.closest('.sample-card');
+    if(card)card.classList.remove('sample-locked');
+    const name=document.getElementById('sample_name_'+n);
+    const brix=document.getElementById('sample_brix_'+n);
+    if(name)name.disabled=false;
+    if(brix)brix.disabled=false;
+    const status=card?.querySelector('.sample-title span');
+    if(status)status.textContent='חישוב אוטומטי';
+    const est=document.getElementById('sample_est_'+n);
+    if(est && est.textContent.trim()==='נעול') est.innerHTML='<span>החישוב יופיע כאן</span>';
+  });
+}
+
 function checkManualSample(n){
   const model=sampleModelFromState(window.__brixSampleState||{});
   const msg=document.getElementById('sample_check_'+n);
@@ -531,10 +546,7 @@ function checkManualSample(n){
     window.__manualSampleChecks[n]=true;
     if(msg)msg.innerHTML='<div class="feedback-good compact-feedback">נכון ✓ הצבתם את y וחישבתם נכון את x.</div>';
     if(window.__manualSampleChecks[1]&&window.__manualSampleChecks[2]){
-      setTimeout(()=>{
-        const s=JSON.parse(localStorage.getItem("brix_student")||"null");
-        renderSampleStage(s,window.__brixSampleState||{});
-      },550);
+      unlockAutoSamplesInPlace();
     }
   }else{
     window.__manualSampleChecks[n]=false;
