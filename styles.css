@@ -4051,3 +4051,117 @@ button{cursor:pointer}
  .group-work-grid,.teacher-group-work-grid{grid-template-columns:1fr}
  .group-work-field textarea{min-height:104px}
 }
+
+/* Final flow QA polish */
+.student-lab-top{
+  position:relative;
+  min-height:122px;
+  align-items:center;
+}
+.student-lab-top>.brand-image{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+.student-lab-top>.student-group-identity{
+  position:absolute;
+  left:0;
+  top:10px;
+  z-index:3;
+  max-width:34vw;
+}
+.projection-nav.projection-nav-four{
+  grid-template-columns:repeat(4,1fr);
+}
+.projection-group-work-card{
+  order:-1;
+}
+.projection-group-progress{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin:18px 0;
+}
+.projection-group-progress>div{
+  padding:18px;
+  border-radius:18px;
+  background:#f3f9f8;
+  border:1px solid #dcebea;
+  text-align:center;
+}
+.projection-group-progress span{
+  display:block;
+  color:var(--muted);
+  font-weight:800;
+}
+.projection-group-progress strong{
+  display:block;
+  margin-top:6px;
+  color:var(--navy);
+  font-size:30px;
+}
+.projection-group-list{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.projection-group-list>div{
+  padding:12px 14px;
+  border:1px solid #e0e8ea;
+  border-radius:14px;
+  background:#fff;
+}
+.projection-group-list strong{
+  display:block;
+  color:var(--navy);
+}
+.projection-group-list span{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
+}
+@media(max-width:850px){
+  .student-lab-top{
+    min-height:108px;
+  }
+  .student-lab-top>.brand-image img{
+    width:min(390px,68vw)!important;
+    max-height:100px!important;
+  }
+  .student-lab-top>.student-group-identity{
+    left:4px;
+    top:6px;
+    max-width:30vw;
+  }
+  .projection-nav.projection-nav-four{
+    grid-template-columns:repeat(4,1fr);
+  }
+  .projection-nav.projection-nav-four button{
+    font-size:9px;
+    padding:8px 3px;
+  }
+  .projection-group-progress{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .projection-group-list{
+    grid-template-columns:1fr 1fr;
+  }
+}
+@media(max-width:520px){
+  .student-lab-top>.student-group-identity{
+    position:static;
+    margin-inline-start:auto;
+    margin-top:92px;
+    max-width:100%;
+  }
+  .student-lab-top{
+    min-height:142px;
+    padding:0 6px;
+  }
+  .projection-group-list{
+    grid-template-columns:1fr;
+  }
+}
