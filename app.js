@@ -37,6 +37,12 @@ function mergeNestedDraft(key,patch,delay=300){
   saveStudentDraftPatch({[key]:next},delay);
 }
 
+function studentGroupIdentity(s,state={}){
+  const members=(state.group_members||[]).filter(Boolean);
+  const names=members.length?members:[s.first_name].filter(Boolean);
+  return '<div class="student-group-identity"><strong>'+esc(s.group_name)+'</strong><span>'+names.map(esc).join(' · ')+'</span></div>';
+}
+
 function lessonProgress(current,active,onStudent=false){
   const labels=["פתיחה","ניסוי","סיכום","רפלקציה"];
   const steps=labels.map((label,i)=>{
@@ -1070,7 +1076,7 @@ async function dashboard(){
    const openingDone=p.students>0 && p.opening===p.students;
    const zeroDone=p.step>=2;
    const calDone=p.cal===6 || p.step>=3;
-   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'done':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'✓':'—')+'</b></div><div class="'+(p.samples>0?'doing':'pending')+'"><span>משקאות</span><b>'+(p.samples>0?p.samples+' דגימות':'—')+'</b></div></div></article>';
+   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span><div class="group-student-names">'+((g.students||[]).length?(g.students||[]).map(esc).join(' · '):'טרם הצטרפו תלמידים')+'</div></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'done':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'✓':'—')+'</b></div><div class="'+(p.samples>0?'doing':'pending')+'"><span>משקאות</span><b>'+(p.samples>0?p.samples+' דגימות':'—')+'</b></div></div></article>';
  }).join("");
 
  shell(
