@@ -155,6 +155,10 @@ async function submitOpening(){
 
 function studentExperiment(s,state){
   const step=Number(state.experiment_step||0);
+  if(step>=4){
+    renderSampleStage(s,state);
+    return;
+  }
   if(step>=3){
     renderCalibrationDone(s,state);
     return;
@@ -348,8 +352,94 @@ function showEquationUse(){
   const m=linearModel(window.__modelPoints);
   const sampleY=Math.max(1,Math.round(window.__modelPoints.reduce((a,p)=>a+p.y,0)/window.__modelPoints.length*10)/10);
   const x=m.a===0?0:(sampleY-m.b)/m.a;
-  document.getElementById('equationBox').innerHTML+='<div class="equation-use"><h3>מהמדידה אל הריכוז</h3><p>נניח שמדדנו דגימה וקיבלנו <strong>'+sampleY+'° Brix</strong>.</p><div class="solve-line"><span>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>'+sampleY+' = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>x ≈ <strong>'+x.toFixed(2)+' גרם/100 מ״ל</strong></span></div><p class="science-note">כך מודל שנבנה מנתוני הכיול מאפשר לנו לאמוד את ריכוז הסוכר בדגימה שאיננו יודעים את ריכוזה מראש.</p></div>';
+  document.getElementById('equationBox').innerHTML+='<div class="equation-use"><h3>מהמדידה אל הריכוז</h3><p>נניח שמדדנו דגימה וקיבלנו <strong>'+sampleY+'° Brix</strong>.</p><div class="solve-line"><span>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>'+sampleY+' = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>x ≈ <strong>'+x.toFixed(2)+' גרם/100 מ״ל</strong></span></div><p class="science-note">כך מודל שנבנה מנתוני הכיול מאפשר לנו לאמוד את ריכוז הסוכר בדגימה שאיננו יודעים את ריכוזה מראש.</p><button class="btn primary experiment-main-btn" onclick="startSampleStage()">ממשיכים לבדיקת משקאות</button></div>';
 }
+
+async function startSampleStage(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  try{await api("update_student_progress",{student_id:s.student_id,experiment_step:4,practice_score:0});}catch(e){}
+  let state;
+  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state=window.__brixModelState||{}}
+  renderSampleStage(s,state);
+}
+
+function sampleModelFromState(state){
+  const pts=(state?.class_calibration||[])
+    .filter(r=>r.average_concentration!=null && r.average_brix!=null)
+    .map(r=>({x:Number(r.average_concentration),y:Number(r.average_brix)}));
+  return pts.length>=2?linearModel(pts):null;
+}
+
+function renderSampleStage(s,state){
+  window.__brixSampleState=state||{};
+  const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
+  const saved=Object.fromEntries((state?.samples||[]).map(x=>[Number(x.sample_slot),x]));
+  const model=sampleModelFromState(state);
+  const modelBox=model
+    ? '<div class="sample-model-strip"><span>משוואת הכיול הכיתתית</span><strong>y = '+model.a.toFixed(2)+'x '+(model.b<0?'−':'+')+' '+Math.abs(model.b).toFixed(2)+'</strong><small>x = ריכוז סוכר · y = °Brix</small></div>'
+    : '<div class="feedback-try">עדיין אין מספיק נתוני כיול כיתתיים לחישוב ריכוז הסוכר.</div>';
+
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים משקאות לא ידועים</h1><p class="samples-lead">לפניכם שישה מקומות לדגימות. כתבו בכל שורה את שם המשקה שקיבלתם, מדדו °Brix, והאפליקציה תחשב בעזרת משוואת הכיול את ריכוז הסוכר המשוער.</p>'+modelBox+'<div class="sample-grid">'+[1,2,3,4,5,6].map(n=>{const row=saved[n]||{};return '<article class="sample-card"><div class="sample-title"><strong>דגימה '+n+'</strong><span>מלאו רק אם קיבלתם דגימה</span></div><label><span>שם המשקה</span><input id="sample_name_'+n+'" value="'+esc(row.sample_name??"")+'" placeholder="למשל: מיץ תפוזים / קולה"></label><label><span>מדידת Brix</span><div class="sample-brix-input"><input id="sample_brix_'+n+'" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(row.brix_value??"")+'" placeholder="0.0" oninput="updateSampleEstimate('+n+')"><strong>°Brix</strong></div></label><div id="sample_est_'+n+'" class="sample-estimate">'+(row.estimated_sugar!=null?'<span>ריכוז סוכר משוער</span><strong>'+Number(row.estimated_sugar).toFixed(2)+' g/100mL</strong>':'<span>החישוב יופיע כאן</span>')+'</div></article>'}).join("")+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות</button></section></main></div>');
+}
+
+function updateSampleEstimate(n){
+  const model=sampleModelFromState(window.__brixSampleState||{});
+  const out=document.getElementById('sample_est_'+n);
+  const raw=document.getElementById('sample_brix_'+n)?.value;
+  if(!out)return;
+  if(!model || raw==='' || !Number.isFinite(Number(raw)) || model.a===0){
+    out.innerHTML='<span>החישוב יופיע כאן</span>';
+    return;
+  }
+  const y=Number(raw);
+  const x=(y-model.b)/model.a;
+  out.innerHTML='<span>ריכוז סוכר משוער</span><strong>'+Math.max(0,x).toFixed(2)+' g/100mL</strong>';
+}
+
+async function saveSamples(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  const model=sampleModelFromState(window.__brixSampleState||{});
+  const msg=document.getElementById('samplesMsg');
+  if(!model || model.a===0){
+    msg.innerHTML='<div class="feedback-try">אין עדיין משוואת כיול כיתתית תקינה.</div>';
+    return;
+  }
+  const samples=[];
+  for(let n=1;n<=6;n++){
+    const name=(document.getElementById('sample_name_'+n)?.value||'').trim();
+    const raw=(document.getElementById('sample_brix_'+n)?.value||'').trim();
+    if(!name && !raw)continue;
+    const brix=Number(raw);
+    if(!name || raw==='' || !Number.isFinite(brix) || brix<0 || brix>100){
+      msg.innerHTML='<div class="feedback-try">בדגימה '+n+' יש להשלים גם שם משקה וגם ערך Brix.</div>';
+      return;
+    }
+    const est=Math.max(0,(brix-model.b)/model.a);
+    samples.push({sample_slot:n,sample_name:name,brix_value:brix,estimated_sugar:Number(est.toFixed(2))});
+  }
+  if(!samples.length){
+    msg.innerHTML='<div class="feedback-try">יש להזין לפחות דגימה אחת.</div>';
+    return;
+  }
+  msg.innerHTML='<div class="inline-error neutral">שומר את תוצאות הקבוצה...</div>';
+  try{
+    await api("save_samples",{student_id:s.student_id,samples});
+    const state=await api("student_state",{student_id:s.student_id});
+    window.__brixSampleState=state;
+    renderSampleSummary(s,state);
+  }catch(e){
+    msg.innerHTML='<div class="feedback-try">לא הצלחנו לשמור את הדגימות. נסו שוב.</div>';
+  }
+}
+
+function renderSampleSummary(s,state){
+  const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
+  const rows=(state?.samples||[]);
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו אפשר להשוות בין המשקאות ולחשוב מה משמעות ההבדלים בריכוז הסוכר המשוער.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
+}
+
 function calibrationSvg(pts,trend,equation){
   const W=640,H=360,L=62,R=24,T=24,B=58;
   const maxX=Math.max(...pts.map(p=>p.x),1)*1.12;
@@ -501,13 +591,15 @@ function teacherGroupProgress(g){
   const opening=Number(g.opening_completed||0);
   const step=Number(g.max_experiment_step||0);
   const cal=Number(g.calibration_count||0);
+  const samples=Number(g.sample_count||0);
   let status="ממתינה להתחלה";
   if(opening>0 && opening<students) status="משלימה פתיחה";
   if(students>0 && opening===students) status="פתיחה הושלמה";
   if(step===1) status="בדיקת אפס ברפרקטומטר";
   if(step===2) status="מודדת תמיסות כיול";
   if(step>=3 || cal===6) status="מדידות כיול הושלמו";
-  return {students,opening,step,cal,status};
+  if(samples>0) status="בודקת משקאות ("+samples+")";
+  return {students,opening,step,cal,samples,status};
 }
 
 
@@ -593,7 +685,7 @@ async function dashboard(){
    const openingDone=p.students>0 && p.opening===p.students;
    const zeroDone=p.step>=2;
    const calDone=p.cal===6 || p.step>=3;
-   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'doing':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'ממתין לכיתה':'—')+'</b></div></div></article>';
+   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'done':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'✓':'—')+'</b></div><div class="'+(p.samples>0?'doing':'pending')+'"><span>משקאות</span><b>'+(p.samples>0?p.samples+' דגימות':'—')+'</b></div></div></article>';
  }).join("");
 
  shell(
