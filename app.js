@@ -124,6 +124,7 @@ async function showStudentExperiment(){
   let state;
   try{
     state=await api("student_state",{student_id:s.student_id});
+    window.__brixDraft=state.draft||{};
     sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
   }catch(e){return}
   if(Number(state.current_stage||0)<1)return;
@@ -134,7 +135,7 @@ async function showStudentOpeningReview(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
-  try{state=await api("student_state",{student_id:s.student_id})}catch(e){return}
+  try{state=await api("student_state",{student_id:s.student_id});window.__brixDraft=state.draft||{}}catch(e){return}
   sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
   const a=state.opening_answer||{};
   const labels={daily:"פעם ביום",weekly:"פעם בשבוע",events:"רק באירועים מיוחדים",never:"לא שותה ממותק"};
@@ -394,12 +395,15 @@ function renderCalibrationDone(s,state){
     {label:'גרם/100 מ״ל',value:'גרם/100 מ״ל',correct:false}
   ]);
   shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3>'+q1+'</div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3>'+q2+'</div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3>'+q3+'</div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3>'+q4+'</div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showCalibrationTable()" disabled>הצגת טבלת הנתונים</button></section></main></div>');
-  const savedAnswers=(state?.draft||window.__brixDraft||{}).variable_answers||{};
+  const savedDraft=state?.draft||window.__brixDraft||{};
+  const savedAnswers=savedDraft.variable_answers||{};
+  const savedSelections=savedDraft.variable_selections||{};
   window.__variableAnswers={};
-  Object.entries(savedAnswers).forEach(([key,value])=>{
-    const btn=[...document.querySelectorAll('.quiz-card button')].find(b=>b.dataset.key===key&&b.dataset.value===String(value)&&b.dataset.correct==='true');
-    if(btn){btn.classList.add('selected-good');window.__variableAnswers[key]=value}
+  Object.entries(savedSelections).forEach(([key,item])=>{
+    const btn=[...document.querySelectorAll('.quiz-card button')].find(b=>b.dataset.key===key&&b.dataset.value===String(item.value));
+    if(btn)btn.classList.add(item.correct?'selected-good':'selected-bad');
   });
+  Object.entries(savedAnswers).forEach(([key,value])=>{window.__variableAnswers[key]=value});
   const next=document.getElementById('toAxesBtn');
   if(next)next.disabled=!['x','y','xu','yu'].every(k=>window.__variableAnswers[k]);
 }
@@ -410,7 +414,8 @@ function answerVariable(btn,key,value,correct){
   box.querySelectorAll('button').forEach(b=>b.classList.remove('selected-good','selected-bad'));
   btn.classList.add(correct?'selected-good':'selected-bad');
   if(correct){window.__variableAnswers[key]=value}else{delete window.__variableAnswers[key]}
-  saveStudentDraftPatch({variable_answers:{...window.__variableAnswers}});
+  const selections={...((window.__brixDraft||{}).variable_selections||{}),[key]:{value,correct}};
+  saveStudentDraftPatch({variable_answers:{...window.__variableAnswers},variable_selections:selections});
   const ok=['x','y','xu','yu'].every(k=>window.__variableAnswers[k]);
   const next=document.getElementById('toAxesBtn');
   if(next) next.disabled=!ok;
@@ -436,8 +441,17 @@ function showAxisBuilder(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   const state=window.__brixModelState||{};
   const stateStage=Number(state.current_stage ?? 1);
-  window.__axisPlacement={x:null,y:null};
+  window.__axisPlacement={...(((window.__brixDraft||{}).axis_placement)||{x:null,y:null})};
   shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 3</span><h1>מקמו את המשתנים על הצירים</h1><p class="model-lead">גררו כל כרטיס לציר המתאים. במובייל אפשר גם להקיש על הכרטיס ואז על הציר.</p><div class="axis-chips"><button class="axis-chip" draggable="true" data-var="concentration" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז הסוכר<br><small>גרם/100 מ״ל</small></button><button class="axis-chip" draggable="true" data-var="brix" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז המומסים<br><small>°Brix</small></button></div><div class="axis-board"><div class="axis-zone y-zone" data-axis="y" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;y&quot;)" onclick="axisTapDrop(&quot;y&quot;)"><span>ציר Y</span><strong id="axisYLabel">הניחו כאן משתנה</strong></div><div class="plot-placeholder"><div class="fake-y"></div><div class="fake-x"></div><span>כאן ייבנה הגרף</span></div><div class="axis-zone x-zone" data-axis="x" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;x&quot;)" onclick="axisTapDrop(&quot;x&quot;)"><span>ציר X</span><strong id="axisXLabel">הניחו כאן משתנה</strong></div></div><div id="axisMsg"></div><button id="buildPointsBtn" class="btn primary experiment-main-btn" onclick="showCalibrationPoints()" disabled>בנו את נקודות הכיול</button></section></main></div>');
+  if(window.__axisPlacement.x==='concentration'){
+    const el=document.getElementById('axisXLabel'); if(el)el.textContent='ריכוז הסוכר · גרם/100 מ״ל';
+    document.querySelector('.axis-chip[data-var="concentration"]')?.classList.add('placed');
+  }
+  if(window.__axisPlacement.y==='brix'){
+    const el=document.getElementById('axisYLabel'); if(el)el.textContent='ריכוז המומסים · °Brix';
+    document.querySelector('.axis-chip[data-var="brix"]')?.classList.add('placed');
+  }
+  document.getElementById('buildPointsBtn').disabled=!(window.__axisPlacement.x&&window.__axisPlacement.y);
 }
 
 window.__selectedAxisChip=null;
@@ -487,12 +501,23 @@ function showCalibrationPoints(){
   const graph=calibrationSvg(pts,false,false);
   shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 4</span><h1>גרף הכיול של הקבוצה שלכם</h1><p class="model-lead">כל נקודה מחברת בין ריכוז הסוכר שהכנתם לבין ערך ה־Brix שאתם מדדתם.</p><div class="class-data-strip group-data-strip">'+pts.map(p=>'<span><b>'+p.x+'</b> g/100mL → <b>'+p.y+'</b> °Brix</span>').join('')+'</div><div id="calibrationGraph" class="calibration-graph">'+graph+'</div><div class="pattern-question"><h3>מה אתם מזהים?</h3><div class="pattern-options"><button onclick="patternAnswer(this,true)">ככל שריכוז הסוכר עולה, גם ערך ה־Brix עולה</button><button onclick="patternAnswer(this,false)">אין קשר בין המשתנים</button><button onclick="patternAnswer(this,false)">ככל שריכוז הסוכר עולה, ערך ה־Brix יורד</button></div><div id="patternMsg"></div></div><button id="trendBtn" class="btn primary experiment-main-btn" onclick="addTrendLine()" disabled>הוספת קו מגמה</button><button id="equationBtn" class="btn ghost experiment-main-btn" onclick="showTrendEquation()" disabled>הצגת משוואת הישר</button><div id="equationBox"></div></section></main></div>');
   window.__modelPoints=pts;
+  const savedPattern=(window.__brixDraft||{}).pattern_answer;
+  if(savedPattern){
+    const btn=[...document.querySelectorAll('.pattern-options button')].find(b=>b.textContent.trim()===String(savedPattern.label||''));
+    if(btn){
+      btn.classList.add(savedPattern.correct?'selected-good':'selected-bad');
+      const pm=document.getElementById('patternMsg');
+      if(pm)pm.innerHTML=savedPattern.correct?'<div class="feedback-good">בדיוק. זהו קשר חיובי בין המשתנים.</div>':'<div class="feedback-try">נסו להתבונן שוב בכיוון הכללי של הנקודות.</div>';
+      if(savedPattern.correct)document.getElementById('trendBtn').disabled=false;
+    }
+  }
 }
 async function refreshModelState(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   try{window.__brixModelState=await api("student_state",{student_id:s.student_id});showCalibrationPoints()}catch(e){}
 }
 function patternAnswer(btn,correct){
+  saveStudentDraftPatch({pattern_answer:{label:btn.textContent.trim(),correct}});
   document.querySelectorAll('.pattern-options button').forEach(b=>b.classList.remove('selected-good','selected-bad'));
   btn.classList.add(correct?'selected-good':'selected-bad');
   document.getElementById('patternMsg').innerHTML=correct?'<div class="feedback-good">בדיוק. זהו קשר חיובי בין המשתנים.</div>':'<div class="feedback-try">נסו להתבונן שוב בכיוון הכללי של הנקודות.</div>';
