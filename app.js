@@ -136,6 +136,8 @@ function router(){
   if(code)setTimeout(()=>{const el=document.getElementById("classCode");if(el)el.value=code},0);
  } else if(view==="student-room")studentRoom();
  else if(view==="teacher")teacherLogin();
+ else if(view==="teacher-menu")teacherMenu();
+ else if(view==="existing-session")existingSession();
  else if(view==="new-session")newSession();
  else if(view==="dashboard")dashboard();
  else home();
