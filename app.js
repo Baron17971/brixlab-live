@@ -70,7 +70,12 @@ async function studentRoom(){
    return;
  }
 
- shell('<div class="student-lab-shell"><div class="student-lab-top">'+brand()+'</div><div class="card student-next-card"><span class="student-kicker">הניסוי נפתח</span><h1>מוכנים להתחיל?</h1><p>הפתיחה הסתיימה. מכאן תתקדמו בקצב הקבוצה לאורך רצף הניסוי.</p><button class="btn primary" disabled>רצף הניסוי ייפתח בשלב הבא</button></div></div>');
+ if(state.current_stage===1){
+   studentExperiment(s,state);
+   return;
+ }
+
+ shell('<div class="student-lab-shell"><div class="student-lab-top">'+brand()+'</div><div class="card student-next-card"><span class="student-kicker">השלב הכיתתי הבא</span><h1>ממתינים להנחיית המורה</h1><p>הניסוי העצמאי הסתיים. המסך הבא ייפתח עם המעבר הכיתתי.</p></div></div>');
 }
 
 function studentOpening(s){
@@ -106,6 +111,65 @@ async function submitOpening(){
  }catch(e){
    msg.innerHTML='<div class="inline-error">לא הצלחנו לשמור. נסו שוב.</div>';
  }
+}
+
+const BrixPracticeQuestions=[
+  {value:0,y:84,choices:[0,4,8]},
+  {value:8,y:57,choices:[4,8,12]},
+  {value:15,y:33,choices:[10,15,20]}
+];
+
+function studentExperiment(s,state){
+  const step=Number(state.experiment_step||0);
+  if(step>=2){
+    renderPracticeDone(s);
+    return;
+  }
+  if(step===1){
+    renderBrixPractice(s,0,0);
+    return;
+  }
+
+  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header><main class="experiment-intro"><section class="experiment-hero card"><span class="student-kicker">שלב 1 · מכירים את המכשיר</span><h1>רפרקטומטר — מה בעצם מודדים?</h1><p class="experiment-lead">הרפרקטומטר מודד את <strong>ריכוז כלל החומרים המומסים</strong> בתמיסה באמצעות שבירת אור. בתמיסות הסוכר שלנו ערך הקריאה יוצג ביחידות <strong>Brix</strong>.</p><div class="science-note"><strong>חשוב:</strong> המכשיר אינו “מזהה סוכר”. בפירות ובמשקאות הוא מגיב לכלל המומסים.</div></section><section class="how-grid"><article class="how-card"><b>1</b><h3>מניחים טיפות</h3><p>פותחים את המכסה ומניחים כמה טיפות על לוח הזכוכית.</p></article><article class="how-card"><b>2</b><h3>סוגרים</h3><p>סוגרים את המכסה כך שהנוזל יתפזר על פני המשטח.</p></article><article class="how-card"><b>3</b><h3>מול האור</h3><p>מביטים דרך העינית כשהמכשיר מופנה אל מקור אור.</p></article><article class="how-card"><b>4</b><h3>קוראים Brix</h3><p>קוראים את הערך במקום שבו נפגשים האזור הכחול והאזור הבהיר.</p></article></section><section class="cleaning-tip card"><div>🧻</div><div><strong>בין מדידה למדידה:</strong><br>מנגבים היטב את לוח הזכוכית לפני שמניחים דגימה חדשה.</div></section><button class="btn primary experiment-main-btn" onclick="startBrixPractice()">הבנתי — לתרגול קריאה</button></main></div>');
+}
+
+async function startBrixPractice(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  try{await api("update_student_progress",{student_id:s.student_id,experiment_step:1});}catch(e){}
+  renderBrixPractice(s,0,0);
+}
+
+function renderBrixPractice(s,index,score){
+  const q=BrixPracticeQuestions[index];
+  if(!q){finishBrixPractice(score);return}
+  window.__brixPracticeIndex=index;
+  window.__brixPracticeScore=score;
+  shell('<div class="student-experiment-shell practice-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header><main class="practice-main"><section class="practice-card card"><div class="practice-top"><span class="student-kicker">שלב 2 · מתרגלים קריאה</span><strong>'+(index+1)+' / '+BrixPracticeQuestions.length+'</strong></div><h1>איזה ערך Brix מוצג?</h1><p>הסתכלו על קו הגבול בין הכחול ללבן ובחרו את הקריאה המתאימה.</p><div class="brix-viewer" style="--brix-y:'+q.y+'%"><div class="viewer-blue"></div><div class="viewer-boundary"></div><div class="viewer-scale"><span style="top:8%">20</span><span style="top:27%">15</span><span style="top:47%">10</span><span style="top:67%">5</span><span style="top:86%">0</span></div><div class="viewer-label">Brix</div></div><div class="practice-choices">'+q.choices.map(v=>'<button class="practice-choice" onclick="checkBrixAnswer('+v+')">'+v+'° Brix</button>').join("")+'</div><div id="practiceFeedback" class="practice-feedback"></div></section></main></div>');
+}
+
+function checkBrixAnswer(answer){
+  const index=window.__brixPracticeIndex||0;
+  const score=window.__brixPracticeScore||0;
+  const q=BrixPracticeQuestions[index];
+  const fb=document.getElementById("practiceFeedback");
+  if(answer===q.value){
+    fb.innerHTML='<div class="feedback-good">נכון ✓ ממשיכים לקריאה הבאה.</div>';
+    setTimeout(()=>renderBrixPractice(JSON.parse(localStorage.getItem("brix_student")||"null"),index+1,score+1),650);
+  }else{
+    fb.innerHTML='<div class="feedback-try">כמעט. הסתכלו שוב על קו הגבול ונסו פעם נוספת.</div>';
+  }
+}
+
+async function finishBrixPractice(score){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  try{await api("update_student_progress",{student_id:s.student_id,experiment_step:2,practice_score:score});}catch(e){}
+  renderPracticeDone(s);
+}
+
+function renderPracticeDone(s){
+  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header><main class="practice-done-wrap"><section class="practice-done card"><div class="done-mark">✓</div><span class="student-kicker">הרפרקטומטר מוכן</span><h1>יופי. אתם יודעים לקרוא Brix.</h1><p>עכשיו אפשר לעבור לחלק א׳ של הניסוי: הכנת תמיסת הכיול של הקבוצה ומדידת התמיסות הידועות.</p><div class="next-preview"><strong>השלב הבא</strong><span>כיול · הכנת תמיסה · מדידות · גרף</span></div><button class="btn primary" disabled>שלב הכיול יתווסף עכשיו</button></section></main></div>');
 }
 
 function teacherLogin(){
