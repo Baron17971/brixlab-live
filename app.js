@@ -233,6 +233,59 @@ function renderCalibration(s,state){
   shell('<div class="student-experiment-shell calibration-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(2)+'<main class="calibration-main"><section class="calibration-card card"><span class="student-kicker">חלק א׳ · גרף כיול</span><h1>מדידת 6 תמיסות הכיול</h1><p class="calibration-lead">בדיקת המים הייתה רק בדיקת האפס. עכשיו נגבו את לוח הזכוכית ומדדו ברפרקטומטר את שש התמיסות הידועות, אחת אחרי השנייה.</p><div class="science-note"><strong>בין כל שתי מדידות:</strong> נגבו היטב את לוח הזכוכית לפני שמניחים את התמיסה הבאה.</div><div class="calibration-grid">'+[1,2,3,4,5,6].map(n=>{const row=(state?.calibration||[]).find(x=>Number(x.solution_number)===n)||{};return '<div class="calibration-input"><span>תמיסה '+n+'</span><label class="mini-field"><small>ריכוז סוכר</small><div><input id="conc_'+n+'" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="'+esc(row.sugar_concentration??"")+'" placeholder="גרם/100 מ״ל"><strong>g/100mL</strong></div></label><label class="mini-field"><small>מדידת מומסים</small><div><input id="cal_'+n+'" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(saved[n]??"")+'" placeholder="Brix"><strong>°Brix</strong></div></label></div>'}).join("")+'</div><div id="calibrationMsg"></div><button class="btn primary experiment-main-btn" onclick="saveCalibration()">שמירת המדידות</button></section></main></div>');
 }
 
+function calibrationQualityCheck(measurements){
+  const pts=measurements
+    .map(m=>({n:Number(m.solution_number),x:Number(m.sugar_concentration),y:Number(m.brix_value)}))
+    .sort((a,b)=>a.x-b.x);
+
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].x<=pts[i-1].x){
+      return {
+        ok:false,
+        type:'concentration',
+        message:'ריכוזי הסוכר צריכים לעלות מתמיסה לתמיסה. בדקו את ערכי הריכוז שהזנתם.'
+      };
+    }
+  }
+
+  const model=linearModel(pts);
+  const meanY=pts.reduce((a,p)=>a+p.y,0)/pts.length;
+  const ssTot=pts.reduce((a,p)=>a+Math.pow(p.y-meanY,2),0);
+  const ssRes=pts.reduce((a,p)=>a+Math.pow(p.y-(model.a*p.x+model.b),2),0);
+  const r2=ssTot===0?0:1-(ssRes/ssTot);
+  const drops=[];
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].y < pts[i-1].y-0.8){
+      drops.push([pts[i-1].n,pts[i].n]);
+    }
+  }
+
+  if(model.a<=0){
+    return {
+      ok:false,
+      type:'descending',
+      message:'עקומת הכיול יוצאת יורדת, וזה לא מתאים לניסוי. ככל שריכוז הסוכר עולה, ערך ה־Brix אמור בדרך כלל לעלות. נקו את הרפרקטומטר, בדקו את התמיסות ומדדו שוב.'
+    };
+  }
+
+  if(r2<0.75 || drops.length>=2){
+    return {
+      ok:false,
+      type:'poor',
+      message:'המדידות אינן יוצרות מגמה עולה מספיק עקבית. כנראה יש מדידה אחת או יותר שדורשת בדיקה חוזרת לפני בניית הגרף.'
+    };
+  }
+
+  return {
+    ok:true,
+    r2,
+    slope:model.a,
+    warning:(r2<0.9 || drops.length===1)
+      ? 'הנתונים עולים באופן כללי, אבל יש מעט פיזור. אפשר להמשיך, אך מומלץ לבדוק שוב ערך חריג אם הוא נראה לא סביר.'
+      : ''
+  };
+}
+
 async function saveCalibration(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
@@ -249,7 +302,16 @@ async function saveCalibration(){
     }
     measurements.push({solution_number:n,sugar_concentration:concentration,brix_value:value});
   }
-  msg.innerHTML='<div class="inline-error neutral">שומר את מדידות הקבוצה...</div>';
+  const quality=calibrationQualityCheck(measurements);
+  if(!quality.ok){
+    msg.innerHTML='<div class="calibration-quality-stop"><strong>עצרו רגע — כדאי למדוד שוב</strong><p>'+quality.message+'</p><span>המערכת לא תבנה גרף כיול מנתונים שאינם מתאימים למגמה הצפויה.</span></div>';
+    return;
+  }
+  if(quality.warning){
+    msg.innerHTML='<div class="calibration-quality-warn"><strong>שימו לב</strong><p>'+quality.warning+'</p></div>';
+  }else{
+    msg.innerHTML='<div class="inline-error neutral">שומר את מדידות הקבוצה...</div>';
+  }
   try{
     await api("save_calibration",{student_id:s.student_id,measurements});
     let state=await api("student_state",{student_id:s.student_id});
