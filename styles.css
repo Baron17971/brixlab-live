@@ -221,3 +221,21 @@ button{cursor:pointer}
   .auth-primary{min-height:62px;font-size:20px}
   .auth-secondary{min-height:56px}
 }
+
+.teacher-auth-card{max-width:500px}
+.teacher-menu-card{max-width:500px}
+.auth-subtitle{margin:-14px 0 20px;color:#6b7f86;font-weight:700}
+.inline-error{
+  margin:0 0 14px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fff0f0;
+  color:#8a2d2d;
+  border:1px solid #efc5c5;
+  font-weight:700;
+}
+.inline-error.neutral{
+  background:#eef8f8;
+  color:#246b76;
+  border-color:#bfe2e5;
+}
