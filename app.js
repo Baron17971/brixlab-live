@@ -48,7 +48,12 @@ async function joinClass(){
 function studentRoom(){
  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
  if(!s){go("student");return}
- shell('<section class="hero"><div>'+brand()+'<div class="card waiting"><div class="emoji">🧪</div><h2>ברוך הבא, '+esc(s.first_name)+'</h2><p>'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="notice">נכנסת בהצלחה. ממתינים שמיתר תפתח את השלב הראשון.</div><button class="btn ghost" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div><div class="art"></div></section>')
+ imageScreen(
+   "student-room-screen clean-login-screen",
+   "/public/screens/brixlab-desktop.png",
+   "/public/screens/brixlab-mobile.png",
+   '<div class="auth-wrap"><div class="auth-card waiting-card"><h1>ברוך הבא, '+esc(s.first_name)+'</h1><p class="room-meta">'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="room-note">נכנסת בהצלחה. ממתינים לפתיחת השלב הראשון.</div><button class="auth-link exit-link" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div>'
+ );
 }
 
 function teacherLogin(){
@@ -101,7 +106,13 @@ async function resumeExistingSession(){
 }
 
 function newSession(){
- shell('<section class="hero"><div>'+brand()+'<div class="card"><h2>פתיחת שיעור חדש</h2><p>יוצרים כיתה, קוד כניסה וקבוצות אוטומטית.</p><div id="msg"></div><div class="field"><label>שם הכיתה</label><input id="className" placeholder="לדוגמה ח׳2"></div><div class="field"><label>מספר קבוצות</label><select id="groupCount">'+[4,5,6,7,8,9,10].map(n=>'<option '+(n===6?'selected':'')+'>'+n+'</option>').join("")+'</select></div><button class="btn primary" style="width:100%" onclick="createSession()">צור שיעור וקוד כיתה</button><a class="small-link" href="#teacher">חזרה</a></div></div><div class="art"></div></section>')
+ if(sessionStorage.getItem("brix_teacher_unlocked")!=="1"){go("teacher");return}
+ imageScreen(
+   "new-session-screen clean-login-screen",
+   "/public/screens/brixlab-desktop.png",
+   "/public/screens/brixlab-mobile.png",
+   '<div class="auth-wrap"><div class="auth-card new-session-card"><h1>פתיחת שיעור חדש</h1><p class="auth-subtitle">יוצרים כיתה, קוד כניסה וקבוצות אוטומטית.</p><div id="msg"></div><label class="auth-field"><span>שם הכיתה</span><input id="className" placeholder="לדוגמה ח׳2"></label><label class="auth-field"><span>מספר קבוצות</span><select id="groupCount">'+[4,5,6,7,8,9,10].map(n=>'<option '+(n===6?'selected':'')+'>'+n+'</option>').join("")+'</select></label><button class="auth-primary" onclick="createSession()">צור שיעור וקוד כיתה <span>‹</span></button><button class="auth-link" onclick="go(\'teacher-menu\')">חזרה</button></div></div>'
+ );
 }
 async function createSession(){
  const className=document.getElementById("className").value.trim();
@@ -122,7 +133,7 @@ async function dashboard(){
  const s=data.session;
  const joinUrl=location.origin+location.pathname+'#student?code='+encodeURIComponent(s.class_code);
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
- shell('<div class="topbar"><div>'+brand()+'</div><button class="btn ghost" onclick="localStorage.removeItem(\'brix_teacher\');go(\'home\')">יציאה</button></div><div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card"><h3>שלבי השיעור</h3><div class="stage-row">'+["פתיחה","רפרקטומטר","כיול","חקר","השוואה","תכן","סיכום","רפלקציה"].map((x,i)=>'<div class="stage '+(i===s.current_stage?'active':'')+'">'+(i+1)+'. '+x+'</div>').join("")+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · דשבורד מורה</h2><p>מורה: מיתר</p><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div><div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>');
+ shell('<div class="topbar"><div>'+brand()+'</div><button class="btn ghost" onclick="localStorage.removeItem(\'brix_teacher\');go(\'home\')">יציאה</button></div><div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card"><h3>שלבי השיעור</h3><div class="stage-row">'+["פתיחה","רפרקטומטר","כיול","חקר","השוואה","תכן","סיכום","רפלקציה"].map((x,i)=>'<div class="stage '+(i===s.current_stage?'active':'')+'">'+(i+1)+'. '+x+'</div>').join("")+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · דשבורד מורה</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div><div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>');
  clearTimeout(window.__brixTimer);
  window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")) dashboard();},5000);
 }
