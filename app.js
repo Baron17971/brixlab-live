@@ -110,8 +110,16 @@ function existingSession(){
 async function resumeExistingSession(){
   const code=(document.getElementById("existingClassCode")?.value||"").trim();
   const msg=document.getElementById("existingMsg");
+  const teacherName=sessionStorage.getItem("brix_teacher_name")||"";
   if(!code){msg.innerHTML='<div class="inline-error">יש להזין קוד כיתה.</div>';return}
-  msg.innerHTML='<div class="inline-error neutral">האפשרות להתחבר לכיתה קיימת תחובר בשלב הבא.</div>';
+  msg.innerHTML='<div class="inline-error neutral">מתחבר לכיתה...</div>';
+  try{
+    const data=await api("resume_session",{class_code:code,teacher_name:teacherName});
+    localStorage.setItem("brix_teacher",JSON.stringify(data));
+    go("dashboard");
+  }catch(e){
+    msg.innerHTML='<div class="inline-error">לא נמצאה כיתה פעילה עם הקוד הזה עבור המורה הנוכחי.</div>';
+  }
 }
 
 function newSession(){
