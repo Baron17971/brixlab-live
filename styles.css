@@ -1478,3 +1478,124 @@ button{cursor:pointer}
     padding:22px 18px;
   }
 }
+
+/* Persistent lesson progress */
+.lesson-progress{
+  max-width:1040px;
+  margin:0 auto 16px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+.lesson-step{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.82);
+  color:#6f8188;
+  border-radius:16px;
+  padding:10px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font-weight:800;
+  min-height:48px;
+  box-shadow:0 6px 18px rgba(16,55,70,.06);
+}
+.lesson-step.unlocked{
+  color:var(--navy);
+  cursor:pointer;
+}
+.lesson-step.active{
+  background:var(--navy);
+  color:#fff;
+  border-color:var(--navy);
+}
+.lesson-step.locked{
+  opacity:.48;
+  cursor:not-allowed;
+}
+.step-dot{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef7f8;
+  color:var(--navy);
+  font-size:12px;
+  flex:0 0 auto;
+}
+.lesson-step.active .step-dot{
+  background:#fff;
+  color:var(--navy);
+}
+.phase.open{
+  background:#e9f7f8;
+  color:#176b77;
+  border-color:#c4e4e7;
+}
+.review-main{
+  grid-template-columns:1fr;
+  max-width:720px;
+}
+.review-card{
+  text-align:center;
+}
+.review-answer{
+  margin:18px 0;
+  padding:16px;
+  border-radius:16px;
+  background:#f5fafb;
+  border:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.review-answer span{color:var(--muted)}
+.review-answer strong{font-size:20px;color:var(--navy)}
+.review-guesses{
+  margin-bottom:18px;
+}
+.review-guesses>div{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+.review-guesses span{
+  display:block;
+  padding:11px 8px;
+  border-radius:13px;
+  background:#fff;
+  border:1px solid var(--line);
+  color:var(--muted);
+}
+.review-guesses b{
+  display:block;
+  margin-top:5px;
+  color:var(--teal);
+  font-size:20px;
+}
+@media(max-width:850px){
+  .lesson-progress{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;
+    margin-bottom:12px;
+  }
+  .lesson-step{
+    min-height:44px;
+    padding:8px 4px;
+    border-radius:13px;
+    font-size:11px;
+    flex-direction:column;
+    gap:3px;
+  }
+  .step-dot{
+    width:22px;
+    height:22px;
+    font-size:11px;
+  }
+  .review-guesses>div{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
