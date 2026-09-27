@@ -155,8 +155,12 @@ async function submitOpening(){
 
 function studentExperiment(s,state){
   const step=Number(state.experiment_step||0);
+  if(step>=3){
+    renderCalibrationDone(s,state);
+    return;
+  }
   if(step>=2){
-    renderPracticeDone(s);
+    renderCalibration(s,state);
     return;
   }
   if(step===1){
@@ -188,7 +192,7 @@ function checkRealBrixReading(){
     return;
   }
   if(value>=0 && value<=1){
-    fb.innerHTML='<div class="feedback-good">מצוין ✓ הקריאה מתאימה למים. ממשיכים לכיול.</div>';
+    fb.innerHTML='<div class="feedback-good">מצוין ✓ בדיקת האפס תקינה. עוברים מיד למדידת תמיסות הכיול.</div>';
     setTimeout(()=>finishBrixPractice(1),700);
   }else{
     fb.innerHTML='<div class="feedback-try">הקריאה גבוהה מהצפוי למים. נקו את משטח הזכוכית, הניחו מים מחדש ומדדו שוב.</div>';
@@ -199,12 +203,44 @@ async function finishBrixPractice(score){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   try{await api("update_student_progress",{student_id:s.student_id,experiment_step:2,practice_score:score});}catch(e){}
-  renderPracticeDone(s);
+  let state;
+  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state={current_stage:Number(sessionStorage.getItem("brix_student_stage")||1),calibration:[]}}
+  renderCalibration(s,state);
 }
 
-function renderPracticeDone(s){
-  const stateStage=Number(sessionStorage.getItem("brix_student_stage")||1);
-  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="practice-done-wrap"><section class="practice-done card"><div class="done-mark">✓</div><span class="student-kicker">הרפרקטומטר מוכן</span><h1>יופי. אתם יודעים לקרוא Brix.</h1><p>עכשיו אפשר לעבור לחלק א׳ של הניסוי: הכנת תמיסת הכיול של הקבוצה ומדידת התמיסות הידועות.</p><div class="next-preview"><strong>השלב הבא</strong><span>כיול · הכנת תמיסה · מדידות · גרף</span></div><button class="btn primary" disabled>שלב הכיול יתווסף עכשיו</button></section></main></div>');
+function renderCalibration(s,state){
+  const stateStage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
+  const saved=Object.fromEntries((state?.calibration||[]).map(x=>[Number(x.solution_number),x.brix_value]));
+  shell('<div class="student-experiment-shell calibration-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="calibration-main"><section class="calibration-card card"><span class="student-kicker">חלק א׳ · גרף כיול</span><h1>מדידת 6 תמיסות הכיול</h1><p class="calibration-lead">בדיקת המים הייתה רק בדיקת האפס. עכשיו נגבו את לוח הזכוכית ומדדו ברפרקטומטר את שש התמיסות הידועות, אחת אחרי השנייה.</p><div class="science-note"><strong>בין כל שתי מדידות:</strong> נגבו היטב את לוח הזכוכית לפני שמניחים את התמיסה הבאה.</div><div class="calibration-grid">'+[1,2,3,4,5,6].map(n=>'<label class="calibration-input"><span>תמיסה '+n+'</span><div><input id="cal_'+n+'" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(saved[n]??"")+'" placeholder="Brix"><strong>°Brix</strong></div></label>').join("")+'</div><div id="calibrationMsg"></div><button class="btn primary experiment-main-btn" onclick="saveCalibration()">שמירת המדידות</button></section></main></div>');
+}
+
+async function saveCalibration(){
+  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+  if(!s)return;
+  const msg=document.getElementById("calibrationMsg");
+  const measurements=[];
+  for(let n=1;n<=6;n++){
+    const raw=document.getElementById("cal_"+n)?.value;
+    const value=Number(raw);
+    if(raw==="" || !Number.isFinite(value) || value<0 || value>100){
+      msg.innerHTML='<div class="feedback-try">יש להזין ערך Brix לכל שש התמיסות.</div>';
+      return;
+    }
+    measurements.push({solution_number:n,brix_value:value});
+  }
+  msg.innerHTML='<div class="inline-error neutral">שומר את מדידות הקבוצה...</div>';
+  try{
+    await api("save_calibration",{student_id:s.student_id,measurements});
+    let state=await api("student_state",{student_id:s.student_id});
+    renderCalibrationDone(s,state);
+  }catch(e){
+    msg.innerHTML='<div class="feedback-try">לא הצלחנו לשמור את המדידות. נסו שוב.</div>';
+  }
+}
+
+function renderCalibrationDone(s,state){
+  const stateStage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
+  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="practice-done-wrap"><section class="practice-done card"><div class="done-mark">✓</div><span class="student-kicker">מדידות הכיול נשמרו</span><h1>שש התמיסות נמדדו.</h1><p>השלב הבא הוא בניית גרף הכיול מתוך ערכי ה־Brix שמדדתם.</p><div class="next-preview"><strong>הבא</strong><span>גרף כיול</span></div><button class="btn primary" disabled>בניית הגרף תתווסף בשלב הבא</button></section></main></div>');
 }
 
 function teacherLogin(){
