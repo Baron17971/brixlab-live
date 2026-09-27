@@ -31,7 +31,7 @@ function studentLogin(){
     "student-login-screen",
     "/public/screens/student-login-desktop1.png",
     "/public/screens/student-login-mobile1.png",
-    '<div class="login-live student-live"><div id="msg"></div><input id="classCode" class="live-input code-input" inputmode="numeric" maxlength="6" aria-label="קוד כיתה"><input id="firstName" class="live-input name-input" aria-label="שם פרטי"><button class="live-submit" aria-label="נכנסים למעבדה" onclick="joinClass()"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
+    '<div class="login-live student-live"><div id="msg"></div><input id="classCode" class="live-input code-input" inputmode="numeric" maxlength="6" aria-label="קוד כיתה" placeholder="קוד כיתה"><input id="firstName" class="live-input name-input" aria-label="שם פרטי" placeholder="שם פרטי"><button class="live-submit" aria-label="נכנסים למעבדה" onclick="joinClass()"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
   );
 }
 async function joinClass(){
