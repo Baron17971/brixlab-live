@@ -7,37 +7,59 @@ async function api(action,payload={}){
   if(!r.ok) throw new Error(j.error||"request_failed");
   return j.data;
 }
-function shell(content){root.innerHTML='<div class="shell">'+content+'</div>'}
+function shell(content,cls=""){root.innerHTML='<div class="shell '+cls+'">'+content+'</div>'}
 function brand(){return '<div class="brand"><div class="logo">Brix<span>Lab</span></div><div class="tag">מתוק מדויק</div><div class="subtag">חוקרים • מודדים • מתנסים • יוצרים</div></div>'}
 function go(view){location.hash=view}
 window.addEventListener("hashchange",router);
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
-function home(){
- shell('<section class="hero"><div>'+brand()+'<div class="card"><h1>מעבדת BrixLab</h1><p>חוויית חקר כיתתית למדידת סוכר, עבודה בקבוצות ונתונים חיים.</p><div class="actions"><button class="btn primary" onclick="go(\'student\')">כניסת תלמיד</button><button class="btn secondary" onclick="go(\'teacher\')">כניסת מורה</button></div></div></div><div class="art"></div></section>')
+function imageScreen(kind, desktop, mobile, overlay){
+  shell('<section class="image-screen '+kind+'"><picture class="screen-picture"><source media="(max-width:850px)" srcset="'+mobile+'"><img src="'+desktop+'" alt=""></picture>'+overlay+'</section>','image-shell');
 }
+
+function home(){
+  imageScreen(
+    "home-screen",
+    "/public/screens/home-brixlab-desktop.png",
+    "/public/screens/home-brixlab-mobile.png",
+    '<div class="home-hotspots"><button aria-label="כניסת תלמיד" class="hotspot student-hotspot" onclick="go(\'student\')"></button><button aria-label="כניסת מורה" class="hotspot teacher-hotspot" onclick="go(\'teacher\')"></button></div>'
+  );
+}
+
 function studentLogin(){
- shell('<section class="hero"><div>'+brand()+'<div class="card"><h2>כניסת תלמיד</h2><p>הזינו את קוד הכיתה ואת השם הפרטי.</p><div id="msg"></div><div class="field"><label>קוד כיתה</label><input id="classCode" inputmode="numeric" maxlength="6" placeholder="לדוגמה 482615"></div><div class="field"><label>שם פרטי</label><input id="firstName" placeholder="השם שלך"></div><button class="btn primary" style="width:100%" onclick="joinClass()">נכנסים למעבדה</button><a class="small-link" href="#home">חזרה למסך הבית</a></div></div><div class="art"></div></section>')
+  imageScreen(
+    "student-login-screen",
+    "/public/screens/student-login-desktop.png",
+    "/public/screens/student-login-mobile..png",
+    '<div class="login-live student-live"><div id="msg"></div><input id="classCode" class="live-input code-input" inputmode="numeric" maxlength="6" aria-label="קוד כיתה"><input id="firstName" class="live-input name-input" aria-label="שם פרטי"><button class="live-submit" aria-label="נכנסים למעבדה" onclick="joinClass()"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
+  );
 }
 async function joinClass(){
  const classCode=document.getElementById("classCode").value.trim();
  const firstName=document.getElementById("firstName").value.trim();
  const msg=document.getElementById("msg");
  msg.innerHTML="";
- if(!classCode||!firstName){msg.innerHTML='<div class="error">צריך למלא קוד כיתה ושם פרטי.</div>';return}
+ if(!classCode||!firstName){msg.innerHTML='<div class="floating-error">צריך למלא קוד כיתה ושם פרטי.</div>';return}
  try{
   const data=await api("join_session",{class_code:classCode,first_name:firstName});
   localStorage.setItem("brix_student",JSON.stringify(data)); go("student-room");
- }catch(e){msg.innerHTML='<div class="error">לא מצאתי שיעור פתוח עם הקוד הזה.</div>'}
+ }catch(e){msg.innerHTML='<div class="floating-error">לא מצאתי שיעור פתוח עם הקוד הזה.</div>'}
 }
 function studentRoom(){
  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
  if(!s){go("student");return}
  shell('<section class="hero"><div>'+brand()+'<div class="card waiting"><div class="emoji">🧪</div><h2>ברוך הבא, '+esc(s.first_name)+'</h2><p>'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="notice">נכנסת בהצלחה. ממתינים שמיתר תפתח את השלב הראשון.</div><button class="btn ghost" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div><div class="art"></div></section>')
 }
+
 function teacherLogin(){
- shell('<section class="hero"><div>'+brand()+'<div class="card"><h2>כניסת מורה</h2><p>בגרסת ההרצה הנוכחית אפשר לפתוח שיעור חדש.</p><div class="notice">אימות מורה מאובטח יתווסף לפני שימוש רחב.</div><div class="actions"><button class="btn primary" onclick="go(\'new-session\')">פתיחת שיעור חדש</button></div><a class="small-link" href="#home">חזרה למסך הבית</a></div></div><div class="art"></div></section>')
+  imageScreen(
+    "teacher-login-screen",
+    "/public/screens/teacher-login-desktop.png",
+    "/public/screens/teacher-login-mobile..png",
+    '<div class="login-live teacher-live"><button class="live-teacher-new" aria-label="פתיחת שיעור חדש" onclick="go(\'new-session\')"></button><button class="live-teacher-existing" aria-label="כניסה לשיעור קיים" onclick="go(\'new-session\')"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
+  );
 }
+
 function newSession(){
  shell('<section class="hero"><div>'+brand()+'<div class="card"><h2>פתיחת שיעור חדש</h2><p>יוצרים כיתה, קוד כניסה וקבוצות אוטומטית.</p><div id="msg"></div><div class="field"><label>שם הכיתה</label><input id="className" placeholder="לדוגמה ח׳2"></div><div class="field"><label>מספר קבוצות</label><select id="groupCount">'+[4,5,6,7,8,9,10].map(n=>'<option '+(n===6?'selected':'')+'>'+n+'</option>').join("")+'</select></div><button class="btn primary" style="width:100%" onclick="createSession()">צור שיעור וקוד כיתה</button><a class="small-link" href="#teacher">חזרה</a></div></div><div class="art"></div></section>')
 }
