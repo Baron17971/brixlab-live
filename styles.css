@@ -21,8 +21,8 @@ button{cursor:pointer}
 }
 .home-hotspots{position:absolute;inset:0;z-index:3}
 /* positions calibrated as percentages so image stays responsive */
-.student-hotspot{left:31%;top:60%;width:18%;height:9%}
-.teacher-hotspot{left:51%;top:60%;width:18%;height:9%}
+.student-hotspot{left:29.4%;top:48.2%;width:21.8%;height:10.2%}
+.teacher-hotspot{left:51.7%;top:48.2%;width:21.8%;height:10.2%}
 
 .login-live{position:absolute;inset:0;z-index:3;pointer-events:none}
 .login-live>*{pointer-events:auto}
@@ -32,13 +32,13 @@ button{cursor:pointer}
   box-shadow:none
 }
 .live-input:focus{box-shadow:0 0 0 3px rgba(26,142,161,.18)}
-.student-live .code-input{left:39.1%;top:47.7%;width:21.8%;height:6.8%}
-.student-live .name-input{left:39.1%;top:56.4%;width:21.8%;height:6.8%}
-.student-live .live-submit{left:39.1%;top:65.7%;width:21.8%;height:7.4%}
-.student-live .live-back{left:43.3%;top:75.4%;width:13.4%;height:4.4%}
-.teacher-live .live-teacher-new{left:39.1%;top:50.6%;width:21.8%;height:7.2%}
-.teacher-live .live-teacher-existing{left:39.1%;top:59.2%;width:21.8%;height:7.2%}
-.teacher-live .live-back{left:43.3%;top:70.6%;width:13.4%;height:4.4%}
+.student-live .code-input{left:38.7%;top:47.2%;width:23.0%;height:6.9%}
+.student-live .name-input{left:38.7%;top:55.2%;width:23.0%;height:6.9%}
+.student-live .live-submit{left:38.6%;top:63.0%;width:23.2%;height:8.4%}
+.student-live .live-back{left:43.0%;top:73.1%;width:14.0%;height:4.8%}
+.teacher-live .live-teacher-new{left:37.0%;top:56.8%;width:26.0%;height:8.7%}
+.teacher-live .live-teacher-existing{left:37.0%;top:66.4%;width:26.0%;height:8.7%}
+.teacher-live .live-back{left:43.0%;top:76.9%;width:14.0%;height:4.7%}
 .floating-error{
   position:absolute;left:50%;top:39%;transform:translateX(-50%);
   background:#fff4f4;color:#8a2d2d;border:1px solid #efc5c5;border-radius:14px;
@@ -90,15 +90,15 @@ button{cursor:pointer}
 
 @media(max-width:850px){
   .screen-picture img{object-fit:cover}
-  .student-hotspot{left:12%;top:67%;width:76%;height:7.5%}
-  .teacher-hotspot{left:12%;top:76.5%;width:76%;height:7.5%}
-  .student-live .code-input{left:14%;top:45.5%;width:72%;height:6.6%;padding:0 4vw}
-  .student-live .name-input{left:14%;top:54.2%;width:72%;height:6.6%;padding:0 4vw}
-  .student-live .live-submit{left:14%;top:63.1%;width:72%;height:7.2%}
-  .student-live .live-back{left:30%;top:73.4%;width:40%;height:4.5%}
-  .teacher-live .live-teacher-new{left:14%;top:51%;width:72%;height:7.2%}
-  .teacher-live .live-teacher-existing{left:14%;top:59.6%;width:72%;height:7.2%}
-  .teacher-live .live-back{left:30%;top:70.6%;width:40%;height:4.5%}
+  .student-hotspot{left:5.5%;top:31.3%;width:44.0%;height:7.4%}
+  .teacher-hotspot{left:50.5%;top:31.3%;width:44.0%;height:7.4%}
+  .student-live .code-input{left:16.7%;top:42.2%;width:66.7%;height:6.7%;padding:0 4vw}
+  .student-live .name-input{left:16.7%;top:50.7%;width:66.7%;height:6.7%;padding:0 4vw}
+  .student-live .live-submit{left:16.7%;top:59.7%;width:66.7%;height:7.5%}
+  .student-live .live-back{left:33%;top:69.0%;width:34%;height:4.4%}
+  .teacher-live .live-teacher-new{left:15.5%;top:52.2%;width:69%;height:7.7%}
+  .teacher-live .live-teacher-existing{left:15.5%;top:61.2%;width:69%;height:7.7%}
+  .teacher-live .live-back{left:32%;top:70.7%;width:36%;height:4.6%}
   .floating-error{top:37%;max-width:86%;white-space:normal;text-align:center}
   .shell:not(.image-shell){padding:16px}
   .hero{grid-template-columns:1fr;min-height:auto}
