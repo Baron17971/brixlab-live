@@ -797,3 +797,262 @@ button{cursor:pointer}
   color:#246b76;
   font-weight:800;
 }
+
+/* Student opening stage */
+.student-opening-shell{
+  min-height:100dvh;
+  background:linear-gradient(180deg,#eef7f8 0%,#f8fbfb 45%,#fff9ef 100%);
+  padding:18px;
+}
+.student-opening-head{
+  max-width:980px;
+  margin:0 auto 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+.student-opening-head .brand-image{padding:0;justify-content:flex-start;width:auto}
+.student-opening-head .brand-image img{
+  width:min(360px,52vw);
+  max-height:105px;
+}
+.student-opening-head>div:last-child{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  color:var(--muted);
+  font-size:14px;
+}
+.student-opening-head strong{color:var(--navy);font-size:17px}
+.student-opening-main{
+  max-width:980px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  align-items:start;
+}
+.opening-card{
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:var(--shadow);
+  border-radius:26px;
+  padding:24px;
+}
+.opening-card h1,.opening-card h2{
+  margin:4px 0 8px;
+  color:var(--navy);
+}
+.opening-card p{
+  margin:0 0 18px;
+  color:var(--muted);
+  line-height:1.5;
+}
+.opening-step,.student-kicker{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 10px;
+  border-radius:999px;
+  background:#e6f5f6;
+  color:#167b8a;
+  font-size:12px;
+  font-weight:900;
+}
+.survey-options{
+  display:grid;
+  gap:10px;
+}
+.survey-choice input{display:none}
+.survey-choice span{
+  display:block;
+  padding:14px 16px;
+  border:1.5px solid #cadbdd;
+  border-radius:16px;
+  background:#fff;
+  font-weight:800;
+  text-align:center;
+  transition:.15s ease;
+}
+.survey-choice input:checked+span{
+  border-color:var(--teal);
+  background:#e9f8f8;
+  box-shadow:0 0 0 3px rgba(26,142,161,.1);
+  color:#126d7a;
+}
+.guess-grid{
+  display:grid;
+  gap:12px;
+}
+.guess-item{
+  display:block;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fff;
+}
+.guess-item>span{
+  display:block;
+  margin-bottom:8px;
+  font-weight:900;
+  color:var(--ink);
+}
+.guess-item>div{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+  gap:7px;
+}
+.guess-item input[type="range"]{
+  width:100%;
+  accent-color:var(--teal);
+}
+.guess-item b{
+  font-size:20px;
+  color:var(--navy);
+  min-width:24px;
+  text-align:center;
+}
+.guess-item small{color:var(--muted)}
+.opening-submit{
+  width:100%;
+  margin-top:14px;
+}
+.opening-wait .wait-pulse{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin:14px 0 4px;
+}
+.wait-pulse span{
+  width:9px;height:9px;border-radius:50%;background:var(--teal);
+  animation:brixPulse 1.2s infinite ease-in-out;
+}
+.wait-pulse span:nth-child(2){animation-delay:.15s}
+.wait-pulse span:nth-child(3){animation-delay:.3s}
+@keyframes brixPulse{
+  0%,80%,100%{transform:scale(.65);opacity:.45}
+  40%{transform:scale(1);opacity:1}
+}
+.student-lab-shell{
+  min-height:100dvh;
+  padding:20px;
+  background:linear-gradient(180deg,#eef7f8,#fff9ef);
+}
+.student-lab-top{
+  display:flex;
+  justify-content:center;
+}
+.student-lab-top .brand-image{padding:0}
+.student-lab-top .brand-image img{
+  width:min(520px,72vw);
+  max-height:145px;
+}
+.student-next-card{
+  max-width:620px;
+  margin:28px auto;
+  text-align:center;
+}
+.student-next-card h1{margin:8px 0}
+.student-next-card p{line-height:1.55}
+
+/* Teacher opening live results */
+.opening-live-card{overflow:hidden}
+.opening-live-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:16px;
+}
+.opening-live-head h2{margin:5px 0 0}
+.opening-live-head>strong{
+  background:#eef8f8;
+  color:#176f7b;
+  padding:8px 12px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+.teacher-survey{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.teacher-survey>div{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:13px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.teacher-survey span{font-size:13px;color:var(--muted);font-weight:700}
+.teacher-survey b{font-size:24px;color:var(--navy)}
+.guess-averages{
+  margin-top:14px;
+  padding:14px;
+  border-radius:16px;
+  background:#f8fbfb;
+  border:1px solid var(--line);
+}
+.guess-averages h3{margin:0 0 10px;font-size:14px}
+.guess-averages>div{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+.guess-averages span{
+  background:#fff;
+  border-radius:12px;
+  padding:9px 10px;
+  text-align:center;
+  font-size:13px;
+}
+.guess-averages b{
+  display:block;
+  font-size:20px;
+  color:var(--teal);
+  margin-top:4px;
+}
+.opening-note{
+  margin:12px 0 0 !important;
+  font-size:13px;
+}
+
+@media(max-width:850px){
+  .student-opening-shell{padding:12px}
+  .student-opening-head{
+    align-items:flex-start;
+    margin-bottom:10px;
+  }
+  .student-opening-head .brand-image img{
+    width:min(300px,62vw);
+    max-height:86px;
+  }
+  .student-opening-head>div:last-child{font-size:12px}
+  .student-opening-head strong{font-size:14px}
+  .student-opening-main{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .opening-card{
+    border-radius:21px;
+    padding:17px;
+  }
+  .opening-card h1{font-size:24px}
+  .opening-card h2{font-size:22px}
+  .survey-choice span{padding:12px}
+  .guess-item{padding:10px 12px}
+  .teacher-survey{
+    grid-template-columns:repeat(2,1fr);
+  }
+  .guess-averages>div{
+    grid-template-columns:repeat(2,1fr);
+  }
+  .opening-live-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
