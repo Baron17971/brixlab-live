@@ -1642,3 +1642,34 @@ button{cursor:pointer}
     padding:7px 10px !important;
   }
 }
+
+/* QR copy link */
+.qr-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.copy-link-btn{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--navy);
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.copy-link-btn:hover{
+  background:#f5fafb;
+}
+@media(max-width:850px){
+  .qr-row{
+    gap:10px;
+  }
+  .copy-link-btn{
+    padding:9px 12px;
+    font-size:13px;
+  }
+}
