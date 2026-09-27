@@ -28,10 +28,10 @@ function home(){
 
 function studentLogin(){
   imageScreen(
-    "student-login-screen",
-    "/public/screens/student-login-desktop1.png",
-    "/public/screens/student-login-mobile1.png",
-    '<div class="login-live student-live"><div id="msg"></div><input id="classCode" class="live-input code-input" inputmode="numeric" maxlength="6" aria-label="קוד כיתה" placeholder="קוד כיתה"><input id="firstName" class="live-input name-input" aria-label="שם פרטי" placeholder="שם פרטי"><button class="live-submit" aria-label="נכנסים למעבדה" onclick="joinClass()"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
+    "student-login-screen clean-login-screen",
+    "/public/screens/brixlab-desktop.png",
+    "/public/screens/brixlab-mobile.png",
+    '<div class="auth-wrap"><div class="auth-card"><h1>כניסת תלמיד</h1><div id="msg"></div><label class="auth-field"><span>קוד כיתה</span><input id="classCode" inputmode="numeric" maxlength="6" placeholder="הקלידו קוד כיתה"></label><label class="auth-field"><span>שם פרטי</span><input id="firstName" placeholder="הקלידו שם פרטי"></label><button class="auth-primary" onclick="joinClass()">נכנסים למעבדה <span>‹</span></button><button class="auth-link" onclick="go(\'home\')">חזרה למסך הבית</button></div></div>'
   );
 }
 async function joinClass(){
@@ -53,10 +53,10 @@ function studentRoom(){
 
 function teacherLogin(){
   imageScreen(
-    "teacher-login-screen",
-    "/public/screens/teacher-login-desktop1.png",
-    "/public/screens/teacher-login-mobile1.png",
-    '<div class="login-live teacher-live"><button class="live-teacher-new" aria-label="פתיחת שיעור חדש" onclick="go(\'new-session\')"></button><button class="live-teacher-existing" aria-label="כניסה לשיעור קיים" onclick="go(\'new-session\')"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
+    "teacher-login-screen clean-login-screen",
+    "/public/screens/brixlab-desktop.png",
+    "/public/screens/brixlab-mobile.png",
+    '<div class="auth-wrap"><div class="auth-card"><h1>כניסת מורה</h1><label class="auth-field"><span>סיסמת מורה</span><input id="teacherPassword" type="password" placeholder="הקלידו סיסמה"></label><button class="auth-primary" onclick="go(\'new-session\')">פתיחת שיעור חדש <span>‹</span></button><button class="auth-secondary" onclick="go(\'new-session\')">כניסה לשיעור קיים</button><button class="auth-link" onclick="go(\'home\')">חזרה למסך הבית</button></div></div>'
   );
 }
 
