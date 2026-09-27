@@ -401,3 +401,33 @@ button{cursor:pointer}
   .student-login-screen .auth-card{margin-top:36vh}
   .existing-session-screen .auth-card{margin-top:36vh}
 }
+
+/* Center uploaded BrixLab logo on app screens */
+.brand-image{
+  width:100%;
+  padding:6px 0 10px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.brand-image img{
+  display:block;
+  width:min(520px,60vw);
+  max-height:150px;
+  object-fit:contain;
+}
+.topbar{
+  position:relative;
+  justify-content:center;
+}
+.topbar>.btn{
+  position:absolute;
+  left:0;
+}
+@media(max-width:850px){
+  .brand-image img{
+    width:min(360px,78vw);
+    max-height:110px;
+  }
+  .topbar>.btn{left:4px}
+}
