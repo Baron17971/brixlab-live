@@ -370,3 +370,8 @@ button{cursor:pointer}
     font-size:14px;
   }
 }
+
+/* Add breathing room below the logo on mobile new-session screen */
+@media(max-width:850px){
+  .new-session-card{margin-top:38vh;}
+}
