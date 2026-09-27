@@ -43,6 +43,11 @@ function studentGroupIdentity(s,state={}){
   return '<div class="student-group-identity"><strong>'+esc(s.group_name)+'</strong><span>'+names.map(esc).join(' · ')+'</span></div>';
 }
 
+function studentUnlockedThrough(fallback=0){
+  const saved=Number(sessionStorage.getItem("brix_student_max_stage"));
+  return Number.isFinite(saved)?Math.max(saved,Number(fallback||0)):Number(fallback||0);
+}
+
 function lessonProgress(current,active,onStudent=false){
   const labels=["פתיחה","ניסוי","בדיקת ידע","מסקנות וחקר"];
   const steps=labels.map((label,i)=>{
@@ -51,7 +56,7 @@ function lessonProgress(current,active,onStudent=false){
     const action=unlocked
       ? (onStudent
           ? (i===0?' onclick="showStudentOpeningReview()"':i===1?' onclick="showStudentExperiment()"':i===2?' onclick="studentQuiz()"':i===3?' onclick="studentGroupWrap(renderGroupConclusions)"':'')
-          : '')
+          : ' onclick="setStage('+i+')"')
       : '';
     const status=i===active?'כעת':unlocked?'פתוח':'טרם נפתח';
     return '<button class="'+cls+'" '+(unlocked?'':'disabled')+action+'><span class="step-dot">'+(i+1)+'</span><span class="step-copy"><strong>'+label+'</strong><small>'+status+'</small></span></button>';
@@ -130,7 +135,7 @@ async function studentQuiz(){
       (answered&&!revealed?'<div class="quiz-sent">התשובה נשלחה ✓<span>ממתינים לחשיפת התשובה ולדיון הכיתתי.</span></div>':'')+
       (revealed?'<div class="quiz-reveal '+(answered===item.correct?'good':'review')+'"><strong>'+(answered===item.correct?'ענית נכון ✓':'כדאי לעבור שוב על הרעיון')+'</strong><p>'+esc(item.note)+'</p></div>':'');
   }
-  shell('<div class="student-lab-shell quiz-student-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(2,2,true)+'<main class="quiz-main card">'+body+'</main></div>');
+  shell('<div class="student-lab-shell quiz-student-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(studentUnlockedThrough(2),2,true)+'<main class="quiz-main card">'+body+'</main></div>');
   clearTimeout(window.__studentTimer);
   window.__studentTimer=setTimeout(()=>{if(location.hash.startsWith("#student-room"))studentQuiz()},2200);
 }
@@ -238,7 +243,7 @@ async function studentGroupWrap(renderFn){
 }
 
 function renderGroupConclusions(s,gs){
-  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+studentGroupIdentity(s,gs)+'</div>'+lessonProgress(3,3,true)+
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+studentGroupIdentity(s,gs)+'</div>'+lessonProgress(studentUnlockedThrough(3),3,true)+
     '<main class="group-work-main"><section class="card group-work-card"><span class="student-kicker">שלב מסכם · עבודה קבוצתית</span><h1>מה מצאנו?</h1><p class="group-work-lead">עוברים מהנתונים למסקנות. אפשר לחלק את הכתיבה בין חברי הקבוצה — כל שדה שנשמר נשאר שייך למי שמילא אותו ולא ניתן לדרוס אותו.</p>'+
     '<div class="group-work-grid">'+
       groupWorkField("conclusions","findings","1. התוצאות המרכזיות שלנו","מה בלט במדידות? אילו דגימות היו גבוהות או נמוכות במיוחד?",gs)+
@@ -249,7 +254,7 @@ function renderGroupConclusions(s,gs){
 }
 
 function renderResearchPlan(s,gs){
-  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(studentUnlockedThrough(3),3,true)+
     '<main class="group-work-main"><section class="card group-work-card research-plan-card"><span class="student-kicker">חקר המשך · תכנון בלבד</span><h1>אם היינו ממשיכים לחקור...</h1><p class="group-work-lead">לא מבצעים ניסוי נוסף עכשיו. מתכננים חקר המשך אפשרי שמבוסס על מה שלמדתם בניסוי.</p>'+
     '<div class="research-idea-strip"><strong>רעיונות אפשריים:</strong><span>דרגת הבשלה של פרי · מיץ טבעי לעומת משקה תעשייתי · השוואה בין זנים · השפעת דילול</span></div>'+
     '<div class="group-work-grid">'+
@@ -277,7 +282,7 @@ async function showGroupWorkDone(){
     renderResearchPlan(s,gs);
     return;
   }
-  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+'<main class="group-work-main"><section class="card group-work-card group-work-done"><div class="done-mark">✓</div><h1>סיימתם את העבודה הקבוצתית</h1><p>המסקנות ותכנון חקר ההמשך נשמרו לקבוצה. אפשר לחזור ולעדכן שדות שכתבתם בעצמכם.</p><div class="group-work-actions"><button class="btn ghost" onclick="studentGroupWrap(renderGroupConclusions)">צפייה במסקנות</button><button class="btn ghost" onclick="studentGroupWrap(renderResearchPlan)">צפייה בתכנון החקר</button></div></section></main></div>');
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(studentUnlockedThrough(3),3,true)+'<main class="group-work-main"><section class="card group-work-card group-work-done"><div class="done-mark">✓</div><h1>סיימתם את העבודה הקבוצתית</h1><p>המסקנות ותכנון חקר ההמשך נשמרו לקבוצה. אפשר לחזור ולעדכן שדות שכתבתם בעצמכם.</p><div class="group-work-actions"><button class="btn ghost" onclick="studentGroupWrap(renderGroupConclusions)">צפייה במסקנות</button><button class="btn ghost" onclick="studentGroupWrap(renderResearchPlan)">צפייה בתכנון החקר</button></div></section></main></div>');
 }
 
 function teacherGroupWorkHtml(gwd){
@@ -304,7 +309,19 @@ async function studentRoom(){
  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
  if(!s){go("student");return}
  let state;
- try{state=await api("student_state",{student_id:s.student_id});window.__brixDraft=state.draft||{};sessionStorage.setItem("brix_student_stage",String(state.current_stage||0))}
+ try{
+   state=await api("student_state",{student_id:s.student_id});
+   try{
+     const si=await api("student_stage_info",{student_id:s.student_id});
+     state.max_stage_opened=Number(si.max_stage_opened??state.current_stage??0);
+     state.current_stage=Number(si.current_stage??state.current_stage??0);
+   }catch(e){
+     state.max_stage_opened=studentUnlockedThrough(state.current_stage||0);
+   }
+   window.__brixDraft=state.draft||{};
+   sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
+   sessionStorage.setItem("brix_student_max_stage",String(state.max_stage_opened||0));
+ }
  catch(e){go("student");return}
 
  if(state.current_stage===0 && !state.opening_submitted){
@@ -317,7 +334,7 @@ async function studentRoom(){
      "student-room-screen clean-login-screen",
      "/public/screens/brixlab-desktop.png",
      "/public/screens/brixlab-mobile.png",
-     '<div class="auth-wrap"><div class="auth-card waiting-card opening-wait"><h1>סיימנו את הפתיחה ✓</h1><p class="room-meta">'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="room-note">התשובות נקלטו. ממתינים לפתיחת הניסוי.</div><div class="wait-pulse"><span></span><span></span><span></span></div><button class="auth-link exit-link" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div>'
+     '<div class="auth-wrap"><div class="auth-card waiting-card opening-wait"><h1>סיימנו את הפתיחה ✓</h1><p class="room-meta">'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="room-note">'+(studentUnlockedThrough(state.max_stage_opened)>=1?'המורה חזרה לפתיחה. השלבים שכבר נפתחו עדיין זמינים לכם.':'התשובות נקלטו. ממתינים לפתיחת הניסוי.')+'</div>'+(studentUnlockedThrough(state.max_stage_opened)>=1?'<button class="auth-primary" onclick="showStudentExperiment()">חזרה לניסוי <span>‹</span></button>':'<div class="wait-pulse"><span></span><span></span><span></span></div>')+'<button class="auth-link exit-link" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div>'
    );
    clearTimeout(window.__studentTimer);
    window.__studentTimer=setTimeout(()=>{if(location.hash.startsWith("#student-room"))studentRoom()},3000);
@@ -339,7 +356,7 @@ async function studentRoom(){
    return;
  }
 
- shell('<div class="student-lab-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(state.current_stage,state.current_stage,true)+'<div class="card student-next-card"><span class="student-kicker">השלב הכיתתי הבא</span><h1>ממתינים להנחיית המורה</h1><p>הניסוי העצמאי הסתיים. כל שלב שכבר נפתח נשאר זמין בסרגל ההתקדמות.</p></div></div>');
+ shell('<div class="student-lab-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(studentUnlockedThrough(state.max_stage_opened??state.current_stage),state.current_stage,true)+'<div class="card student-next-card"><span class="student-kicker">השלב הכיתתי הבא</span><h1>ממתינים להנחיית המורה</h1><p>הניסוי העצמאי הסתיים. כל שלב שכבר נפתח נשאר זמין בסרגל ההתקדמות.</p></div></div>');
 }
 
 async function showStudentExperiment(){
@@ -351,7 +368,14 @@ async function showStudentExperiment(){
     window.__brixDraft=state.draft||{};
     sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
   }catch(e){return}
-  if(Number(state.current_stage||0)<1)return;
+  let unlocked=studentUnlockedThrough(state.current_stage||0);
+  try{
+    const si=await api("student_stage_info",{student_id:s.student_id});
+    unlocked=Number(si.max_stage_opened??unlocked);
+    sessionStorage.setItem("brix_student_max_stage",String(unlocked));
+  }catch(e){}
+  if(unlocked<1)return;
+  state.max_stage_opened=unlocked;
   studentExperiment(s,state);
 }
 
@@ -364,7 +388,7 @@ async function showStudentOpeningReview(){
   const a=state.opening_answer||{};
   const labels={daily:"פעם ביום",weekly:"פעם בשבוע",events:"רק באירועים מיוחדים",never:"לא שותה ממותק"};
   const g=a.guesses||{};
-  shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header>'+lessonProgress(state.current_stage,0,true)+'<main class="student-opening-main review-main"><section class="opening-card review-card"><span class="student-kicker">שלב פתיחה · נשאר פתוח</span><h1>התשובות שלכם</h1><div class="review-answer"><span>תדירות שתיית משקאות ממותקים</span><strong>'+esc(labels[a.survey_option]||"—")+'</strong></div><div class="review-guesses"><h3>הניחושים שלכם</h3><div><span>קולה <b>'+esc(g.cola??"—")+'</b></span><span>תפוזים <b>'+esc(g.orange??"—")+'</b></span><span>תה קר <b>'+esc(g.iced_tea??"—")+'</b></span><span>אנרגיה <b>'+esc(g.energy??"—")+'</b></span></div></div>'+(state.current_stage>=1?'<button class="btn primary" onclick="showStudentExperiment()">חזרה לניסוי</button>':'')+'</section></main></div>');
+  shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header>'+lessonProgress(studentUnlockedThrough(state.max_stage_opened??state.current_stage),0,true)+'<main class="student-opening-main review-main"><section class="opening-card review-card"><span class="student-kicker">שלב פתיחה · נשאר פתוח</span><h1>התשובות שלכם</h1><div class="review-answer"><span>תדירות שתיית משקאות ממותקים</span><strong>'+esc(labels[a.survey_option]||"—")+'</strong></div><div class="review-guesses"><h3>הניחושים שלכם</h3><div><span>קולה <b>'+esc(g.cola??"—")+'</b></span><span>תפוזים <b>'+esc(g.orange??"—")+'</b></span><span>תה קר <b>'+esc(g.iced_tea??"—")+'</b></span><span>אנרגיה <b>'+esc(g.energy??"—")+'</b></span></div></div>'+(state.current_stage>=1?'<button class="btn primary" onclick="showStudentExperiment()">חזרה לניסוי</button>':'')+'</section></main></div>');
 }
 
 function studentOpening(s,state={}){
@@ -451,7 +475,7 @@ function studentExperiment(s,state){
     return;
   }
 
-  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(state.current_stage,1,true)+studentExperimentProgress(1)+'<main class="experiment-intro"><section class="experiment-hero card"><span class="student-kicker">שלב 1 · מכירים את המכשיר</span><h1>רפרקטומטר — מה בעצם מודדים?</h1><p class="experiment-lead">הרפרקטומטר מודד את <strong>ריכוז כלל החומרים המומסים</strong> בתמיסה באמצעות שבירת אור. בתמיסות הסוכר שלנו ערך הקריאה יוצג ביחידות <strong>Brix</strong>.</p><div class="science-note"><strong>חשוב:</strong> המכשיר אינו “מזהה סוכר”. בפירות ובמשקאות הוא מגיב לכלל המומסים.</div></section><section class="how-grid"><article class="how-card"><b>1</b><h3>מניחים טיפות</h3><p>פותחים את המכסה ומניחים כמה טיפות על לוח הזכוכית.</p></article><article class="how-card"><b>2</b><h3>סוגרים</h3><p>סוגרים את המכסה כך שהנוזל יתפזר על פני המשטח.</p></article><article class="how-card"><b>3</b><h3>מול האור</h3><p>מביטים דרך העינית כשהמכשיר מופנה אל מקור אור.</p></article><article class="how-card"><b>4</b><h3>קוראים Brix</h3><p>קוראים את הערך במקום שבו נפגשים האזור הכחול והאזור הבהיר.</p></article></section><section class="cleaning-tip card"><div>🧻</div><div><strong>בין מדידה למדידה:</strong><br>מנגבים היטב את לוח הזכוכית לפני שמניחים דגימה חדשה.</div></section><button class="btn primary experiment-main-btn" onclick="startBrixPractice()">לתרגול עם המכשיר האמיתי</button></main></div>');
+  shell('<div class="student-experiment-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(state.max_stage_opened??state.current_stage),1,true)+studentExperimentProgress(1)+'<main class="experiment-intro"><section class="experiment-hero card"><span class="student-kicker">שלב 1 · מכירים את המכשיר</span><h1>רפרקטומטר — מה בעצם מודדים?</h1><p class="experiment-lead">הרפרקטומטר מודד את <strong>ריכוז כלל החומרים המומסים</strong> בתמיסה באמצעות שבירת אור. בתמיסות הסוכר שלנו ערך הקריאה יוצג ביחידות <strong>Brix</strong>.</p><div class="science-note"><strong>חשוב:</strong> המכשיר אינו “מזהה סוכר”. בפירות ובמשקאות הוא מגיב לכלל המומסים.</div></section><section class="how-grid"><article class="how-card"><b>1</b><h3>מניחים טיפות</h3><p>פותחים את המכסה ומניחים כמה טיפות על לוח הזכוכית.</p></article><article class="how-card"><b>2</b><h3>סוגרים</h3><p>סוגרים את המכסה כך שהנוזל יתפזר על פני המשטח.</p></article><article class="how-card"><b>3</b><h3>מול האור</h3><p>מביטים דרך העינית כשהמכשיר מופנה אל מקור אור.</p></article><article class="how-card"><b>4</b><h3>קוראים Brix</h3><p>קוראים את הערך במקום שבו נפגשים האזור הכחול והאזור הבהיר.</p></article></section><section class="cleaning-tip card"><div>🧻</div><div><strong>בין מדידה למדידה:</strong><br>מנגבים היטב את לוח הזכוכית לפני שמניחים דגימה חדשה.</div></section><button class="btn primary experiment-main-btn" onclick="startBrixPractice()">לתרגול עם המכשיר האמיתי</button></main></div>');
 }
 
 async function startBrixPractice(){
@@ -463,7 +487,7 @@ async function startBrixPractice(){
 
 function renderBrixPractice(s){
   const stateStage=Number(sessionStorage.getItem("brix_student_stage")||1);
-  shell('<div class="student-experiment-shell practice-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(1)+'<main class="practice-main"><section class="practice-card card real-device-card"><span class="student-kicker">שלב 2 · תרגול עם המכשיר האמיתי</span><h1>בדיקת מים</h1><p>קחו את הרפרקטומטר של הקבוצה. הניחו כמה טיפות מים, סגרו את המכסה, הביטו מול האור וקראו את ערך ה־Brix.</p><div class="real-device-steps"><span><b>1</b> טיפות מים</span><span><b>2</b> סוגרים</span><span><b>3</b> מול האור</span><span><b>4</b> קוראים</span></div><label class="real-reading"><span>מה קראתם?</span><div><input id="realBrixReading" type="number" inputmode="decimal" step="0.1" min="0" max="5" placeholder="0.0" value="'+esc((window.__brixDraft||{}).zero_brix??"")+'" oninput="saveStudentDraftPatch({zero_brix:this.value})"><strong>°Brix</strong></div></label><div id="practiceFeedback" class="practice-feedback"></div><button class="btn primary experiment-main-btn" onclick="checkRealBrixReading()">בדיקת הקריאה</button><p class="micro-note">במים נקיים הקריאה צפויה להיות סביב 0° Brix. סטייה קטנה אפשרית; אם הקריאה גבוהה, נקו את המשטח ומדדו שוב.</p></section></main></div>');
+  shell('<div class="student-experiment-shell practice-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(1)+'<main class="practice-main"><section class="practice-card card real-device-card"><span class="student-kicker">שלב 2 · תרגול עם המכשיר האמיתי</span><h1>בדיקת מים</h1><p>קחו את הרפרקטומטר של הקבוצה. הניחו כמה טיפות מים, סגרו את המכסה, הביטו מול האור וקראו את ערך ה־Brix.</p><div class="real-device-steps"><span><b>1</b> טיפות מים</span><span><b>2</b> סוגרים</span><span><b>3</b> מול האור</span><span><b>4</b> קוראים</span></div><label class="real-reading"><span>מה קראתם?</span><div><input id="realBrixReading" type="number" inputmode="decimal" step="0.1" min="0" max="5" placeholder="0.0" value="'+esc((window.__brixDraft||{}).zero_brix??"")+'" oninput="saveStudentDraftPatch({zero_brix:this.value})"><strong>°Brix</strong></div></label><div id="practiceFeedback" class="practice-feedback"></div><button class="btn primary experiment-main-btn" onclick="checkRealBrixReading()">בדיקת הקריאה</button><p class="micro-note">במים נקיים הקריאה צפויה להיות סביב 0° Brix. סטייה קטנה אפשרית; אם הקריאה גבוהה, נקו את המשטח ומדדו שוב.</p></section></main></div>');
 }
 
 function checkRealBrixReading(){
@@ -513,7 +537,7 @@ function renderCalibration(s,state){
       '<label class="mini-field"><small>מדידת מומסים</small><div><input id="cal_'+n+'" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(row.brix_value??draftCal[n]?.brix_value??"")+'" placeholder="Brix" '+disabled+' oninput="saveCalibrationDraftField('+n+',\'brix_value\',this.value)"><strong>°Brix</strong></div></label>'+
       lockNote+'</div>';
   }).join("");
-  shell('<div class="student-experiment-shell calibration-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(2)+'<main class="calibration-main"><section class="calibration-card card"><span class="student-kicker">חלק א׳ · גרף כיול</span><h1>מדידת 6 תמיסות הכיול</h1><p class="calibration-lead">כל חברי הקבוצה עובדים על אותו מאגר נתונים. נתון שכבר נשמר על ידי חבר קבוצה אחר נעול לעריכה, כדי שאף אחד לא ידרוס אותו.</p><div class="science-note"><strong>בין כל שתי מדידות:</strong> נגבו היטב את לוח הזכוכית לפני שמניחים את התמיסה הבאה.</div><div class="calibration-grid">'+cards+'</div><div id="calibrationMsg"></div><button class="btn primary experiment-main-btn" onclick="saveCalibration()">שמירת המדידות</button></section></main></div>');
+  shell('<div class="student-experiment-shell calibration-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(2)+'<main class="calibration-main"><section class="calibration-card card"><span class="student-kicker">חלק א׳ · גרף כיול</span><h1>מדידת 6 תמיסות הכיול</h1><p class="calibration-lead">כל חברי הקבוצה עובדים על אותו מאגר נתונים. נתון שכבר נשמר על ידי חבר קבוצה אחר נעול לעריכה, כדי שאף אחד לא ידרוס אותו.</p><div class="science-note"><strong>בין כל שתי מדידות:</strong> נגבו היטב את לוח הזכוכית לפני שמניחים את התמיסה הבאה.</div><div class="calibration-grid">'+cards+'</div><div id="calibrationMsg"></div><button class="btn primary experiment-main-btn" onclick="saveCalibration()">שמירת המדידות</button></section></main></div>');
 }
 
 function calibrationQualityCheck(measurements){
@@ -637,7 +661,7 @@ function renderCalibrationDone(s,state){
     {label:'°Brix',value:'°Brix',correct:true},
     {label:'גרם/100 מ״ל',value:'גרם/100 מ״ל',correct:false}
   ]);
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3>'+q1+'</div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3>'+q2+'</div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3>'+q3+'</div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3>'+q4+'</div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showCalibrationTable()" disabled>הצגת טבלת הנתונים</button></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3>'+q1+'</div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3>'+q2+'</div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3>'+q3+'</div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3>'+q4+'</div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showCalibrationTable()" disabled>הצגת טבלת הנתונים</button></section></main></div>');
   const savedDraft=state?.draft||window.__brixDraft||{};
   const savedAnswers=savedDraft.variable_answers||{};
   const savedSelections=savedDraft.variable_selections||{};
@@ -676,7 +700,7 @@ function showCalibrationTable(){
     .slice()
     .sort((a,b)=>Number(a.solution_number)-Number(b.solution_number));
 
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 2</span><h1>הנתונים של הקבוצה שלכם</h1><p class="model-lead">לפני שבונים גרף, מרכזים את המדידות בטבלה ומוודאים איזה משתנה הוא בלתי־תלוי ואיזה משתנה תלוי.</p><div class="student-calibration-table-wrap"><table class="student-calibration-table"><thead><tr><th>תמיסה</th><th><span class="var-badge independent">משתנה בלתי־תלוי</span><strong>ריכוז הסוכר</strong><small>גרם סוכר ל־100 מ״ל</small></th><th><span class="var-badge dependent">משתנה תלוי</span><strong>ריכוז המומסים</strong><small>°Brix</small></th></tr></thead><tbody>'+rows.map(r=>'<tr><td data-label="תמיסה"><b>תמיסה '+r.solution_number+'</b></td><td data-label="ריכוז הסוכר">'+Number(r.sugar_concentration).toFixed(2)+'</td><td data-label="°Brix">'+Number(r.brix_value).toFixed(1)+'</td></tr>').join('')+'</tbody></table></div><div class="science-note"><strong>שימו לב:</strong> הגרף הבא ייבנה מהמדידות של הקבוצה שלכם בלבד. הנתונים הכיתתיים נשמרים למסך המורה.</div><button class="btn primary experiment-main-btn" onclick="showAxisBuilder()">בניית הגרף</button></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 2</span><h1>הנתונים של הקבוצה שלכם</h1><p class="model-lead">לפני שבונים גרף, מרכזים את המדידות בטבלה ומוודאים איזה משתנה הוא בלתי־תלוי ואיזה משתנה תלוי.</p><div class="student-calibration-table-wrap"><table class="student-calibration-table"><thead><tr><th>תמיסה</th><th><span class="var-badge independent">משתנה בלתי־תלוי</span><strong>ריכוז הסוכר</strong><small>גרם סוכר ל־100 מ״ל</small></th><th><span class="var-badge dependent">משתנה תלוי</span><strong>ריכוז המומסים</strong><small>°Brix</small></th></tr></thead><tbody>'+rows.map(r=>'<tr><td data-label="תמיסה"><b>תמיסה '+r.solution_number+'</b></td><td data-label="ריכוז הסוכר">'+Number(r.sugar_concentration).toFixed(2)+'</td><td data-label="°Brix">'+Number(r.brix_value).toFixed(1)+'</td></tr>').join('')+'</tbody></table></div><div class="science-note"><strong>שימו לב:</strong> הגרף הבא ייבנה מהמדידות של הקבוצה שלכם בלבד. הנתונים הכיתתיים נשמרים למסך המורה.</div><button class="btn primary experiment-main-btn" onclick="showAxisBuilder()">בניית הגרף</button></section></main></div>');
 }
 
 function showAxisBuilder(){
@@ -685,7 +709,7 @@ function showAxisBuilder(){
   const state=window.__brixModelState||{};
   const stateStage=Number(state.current_stage ?? 1);
   window.__axisPlacement={...(((window.__brixDraft||{}).axis_placement)||{x:null,y:null})};
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 3</span><h1>מקמו את המשתנים על הצירים</h1><p class="model-lead">גררו כל כרטיס לציר המתאים. במובייל אפשר גם להקיש על הכרטיס ואז על הציר.</p><div class="axis-chips"><button class="axis-chip" draggable="true" data-var="concentration" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז הסוכר<br><small>גרם/100 מ״ל</small></button><button class="axis-chip" draggable="true" data-var="brix" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז המומסים<br><small>°Brix</small></button></div><div class="axis-board"><div class="axis-zone y-zone" data-axis="y" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;y&quot;)" onclick="axisTapDrop(&quot;y&quot;)"><span>ציר Y</span><strong id="axisYLabel">הניחו כאן משתנה</strong></div><div class="plot-placeholder"><div class="fake-y"></div><div class="fake-x"></div><span>כאן ייבנה הגרף</span></div><div class="axis-zone x-zone" data-axis="x" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;x&quot;)" onclick="axisTapDrop(&quot;x&quot;)"><span>ציר X</span><strong id="axisXLabel">הניחו כאן משתנה</strong></div></div><div id="axisMsg"></div><button id="buildPointsBtn" class="btn primary experiment-main-btn" onclick="showCalibrationPoints()" disabled>בנו את נקודות הכיול</button></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 3</span><h1>מקמו את המשתנים על הצירים</h1><p class="model-lead">גררו כל כרטיס לציר המתאים. במובייל אפשר גם להקיש על הכרטיס ואז על הציר.</p><div class="axis-chips"><button class="axis-chip" draggable="true" data-var="concentration" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז הסוכר<br><small>גרם/100 מ״ל</small></button><button class="axis-chip" draggable="true" data-var="brix" ondragstart="axisDrag(event)" onclick="selectAxisChip(this)">ריכוז המומסים<br><small>°Brix</small></button></div><div class="axis-board"><div class="axis-zone y-zone" data-axis="y" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;y&quot;)" onclick="axisTapDrop(&quot;y&quot;)"><span>ציר Y</span><strong id="axisYLabel">הניחו כאן משתנה</strong></div><div class="plot-placeholder"><div class="fake-y"></div><div class="fake-x"></div><span>כאן ייבנה הגרף</span></div><div class="axis-zone x-zone" data-axis="x" ondragover="event.preventDefault()" ondrop="axisDrop(event,&quot;x&quot;)" onclick="axisTapDrop(&quot;x&quot;)"><span>ציר X</span><strong id="axisXLabel">הניחו כאן משתנה</strong></div></div><div id="axisMsg"></div><button id="buildPointsBtn" class="btn primary experiment-main-btn" onclick="showCalibrationPoints()" disabled>בנו את נקודות הכיול</button></section></main></div>');
   if(window.__axisPlacement.x==='concentration'){
     const el=document.getElementById('axisXLabel'); if(el)el.textContent='ריכוז הסוכר · גרם/100 מ״ל';
     document.querySelector('.axis-chip[data-var="concentration"]')?.classList.add('placed');
@@ -738,11 +762,11 @@ function showCalibrationPoints(){
   const stateStage=Number(state.current_stage ?? 1);
   const pts=groupCalibrationPoints();
   if(pts.length<2){
-    shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>עוד רגע בונים את הגרף</h1><p class="model-lead">אין עדיין מספיק מדידות של הקבוצה כדי ליצור גרף כיול. חזרו למדידות והשלימו את הנתונים.</p><button class="btn primary" onclick="renderCalibration(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixModelState)">חזרה למדידות</button></section></main></div>');
+    shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>עוד רגע בונים את הגרף</h1><p class="model-lead">אין עדיין מספיק מדידות של הקבוצה כדי ליצור גרף כיול. חזרו למדידות והשלימו את הנתונים.</p><button class="btn primary" onclick="renderCalibration(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixModelState)">חזרה למדידות</button></section></main></div>');
     return;
   }
   const graph=calibrationSvg(pts,false,false);
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 4</span><h1>גרף הכיול של הקבוצה שלכם</h1><p class="model-lead">כל נקודה מחברת בין ריכוז הסוכר שהכנתם לבין ערך ה־Brix שאתם מדדתם.</p><div class="class-data-strip group-data-strip">'+pts.map(p=>'<span><b>'+p.x+'</b> g/100mL → <b>'+p.y+'</b> °Brix</span>').join('')+'</div><div id="calibrationGraph" class="calibration-graph">'+graph+'</div><div class="pattern-question"><h3>מה אתם מזהים?</h3><div class="pattern-options"><button onclick="patternAnswer(this,true)">ככל שריכוז הסוכר עולה, גם ערך ה־Brix עולה</button><button onclick="patternAnswer(this,false)">אין קשר בין המשתנים</button><button onclick="patternAnswer(this,false)">ככל שריכוז הסוכר עולה, ערך ה־Brix יורד</button></div><div id="patternMsg"></div></div><button id="trendBtn" class="btn primary experiment-main-btn" onclick="addTrendLine()" disabled>הוספת קו מגמה</button><button id="equationBtn" class="btn ghost experiment-main-btn" onclick="showTrendEquation()" disabled>הצגת משוואת הישר</button><div id="equationBox"></div></section></main></div>');
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stateStage),1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל · שלב 4</span><h1>גרף הכיול של הקבוצה שלכם</h1><p class="model-lead">כל נקודה מחברת בין ריכוז הסוכר שהכנתם לבין ערך ה־Brix שאתם מדדתם.</p><div class="class-data-strip group-data-strip">'+pts.map(p=>'<span><b>'+p.x+'</b> g/100mL → <b>'+p.y+'</b> °Brix</span>').join('')+'</div><div id="calibrationGraph" class="calibration-graph">'+graph+'</div><div class="pattern-question"><h3>מה אתם מזהים?</h3><div class="pattern-options"><button onclick="patternAnswer(this,true)">ככל שריכוז הסוכר עולה, גם ערך ה־Brix עולה</button><button onclick="patternAnswer(this,false)">אין קשר בין המשתנים</button><button onclick="patternAnswer(this,false)">ככל שריכוז הסוכר עולה, ערך ה־Brix יורד</button></div><div id="patternMsg"></div></div><button id="trendBtn" class="btn primary experiment-main-btn" onclick="addTrendLine()" disabled>הוספת קו מגמה</button><button id="equationBtn" class="btn ghost experiment-main-btn" onclick="showTrendEquation()" disabled>הצגת משוואת הישר</button><div id="equationBox"></div></section></main></div>');
   window.__modelPoints=pts;
   const savedPattern=(window.__brixDraft||{}).pattern_answer;
   if(savedPattern){
@@ -859,7 +883,7 @@ function renderSampleStage(s,state){
       (locked?'<div class="group-field-lock">הדגימה נעולה כדי שלא תידרס.</div>':'')+'</article>';
   }).join("");
 
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים דגימות לא ידועות</h1><p class="samples-lead">זהו מרחב קבוצתי משותף. כל תלמיד יכול להזין דגימות אחרות; דגימה שכבר נשמרה על ידי חבר קבוצה אחר תופיע לכולם אך תהיה נעולה לעריכה.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות שלי</button></section></main></div>');
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים דגימות לא ידועות</h1><p class="samples-lead">זהו מרחב קבוצתי משותף. כל תלמיד יכול להזין דגימות אחרות; דגימה שכבר נשמרה על ידי חבר קבוצה אחר תופיע לכולם אך תהיה נעולה לעריכה.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות שלי</button></section></main></div>');
 }
 
 function unlockAutoSamplesInPlace(){
@@ -1045,7 +1069,7 @@ function renderSampleSummary(s,state){
   const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
   const rows=(state?.samples||[]);
   window.__brixSampleState=state;
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(5)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין המשקאות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג הדגימה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(5)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין המשקאות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג הדגימה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
 }
 
 function calibrationSvg(pts,trend,equation){
@@ -1265,10 +1289,10 @@ function toggleTeacherEquation(){
 function projectionSampleSummaryHtml(data){
   const agg=(data.sample_aggregate||[]).filter(x=>x.comparable);
   if(!agg.length){
-    return '<section id="projection-samples" class="projection-section card"><span class="student-kicker">שלב 3 · בדיקת דגימות</span><h2>תוצאות כיתתיות</h2><div class="graph-waiting"><strong>עדיין אין נתונים משותפים להצגה</strong><span>גרף כיתתי יוצג רק כאשר הקבוצות מדדו את אותן דגימות באופן שניתן להשוואה.</span></div></section>';
+    return '<section id="projection-samples" class="projection-section card"><span class="student-kicker">שלב 2ב · בדיקת דגימות</span><h2>תוצאות כיתתיות</h2><div class="graph-waiting"><strong>עדיין אין נתונים משותפים להצגה</strong><span>גרף כיתתי יוצג רק כאשר הקבוצות מדדו את אותן דגימות באופן שניתן להשוואה.</span></div></section>';
   }
   const rows=agg.map(x=>({sample_name:x.sample_name,estimated_sugar:x.average_estimated_sugar}));
-  return '<section id="projection-samples" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 3 · בדיקת דגימות</span><h2>השוואת הדגימות — ממוצע כיתתי</h2></div><p>מוצגים רק נתונים מצרפיים של הכיתה, ללא שמות קבוצות או תלמידים.</p></div><div class="sample-bar-chart projection-bar-chart">'+sampleBarChartSvg(rows)+'</div></section>';
+  return '<section id="projection-samples" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 2ב · בדיקת דגימות</span><h2>השוואת הדגימות — ממוצע כיתתי</h2></div><p>מוצגים רק נתונים מצרפיים של הכיתה, ללא שמות קבוצות או תלמידים.</p></div><div class="sample-bar-chart projection-bar-chart">'+sampleBarChartSvg(rows)+'</div></section>';
 }
 
 function projectionGroupWorkHtml(gwd){
@@ -1304,13 +1328,17 @@ function teacherProjectionHtml(data,quizData=null,groupWorkData=null){
 
   return '<div class="projection-shell">'+
     '<header class="projection-header"><button class="btn ghost projection-exit" onclick="toggleProjection()">יציאה מהקרנה</button>'+brand()+'<div class="projection-class">'+esc(s.class_name||'')+'</div></header>'+
-    '<nav class="projection-nav '+((quizData||groupWorkData)?'projection-nav-four':'')+'"><button onclick="document.getElementById(\'projection-opening\').scrollIntoView({behavior:\'smooth\'})">1 · פתיחה</button><button onclick="document.getElementById(\'projection-calibration\').scrollIntoView({behavior:\'smooth\'})">2 · כיול</button><button onclick="document.getElementById(\'projection-samples\').scrollIntoView({behavior:\'smooth\'})">3 · דגימות</button>'+((quizData&&quizData.question)?'<button onclick="document.getElementById(\'projection-quiz\')?.scrollIntoView({behavior:\'smooth\'})">4 · בדיקת ידע</button>':groupWorkData?'<button onclick="document.getElementById(\'projection-group-work\')?.scrollIntoView({behavior:\'smooth\'})">4 · מסקנות וחקר</button>':'')+'</nav>'+
+    '<nav class="projection-nav projection-nav-dynamic">'+
+      '<button onclick="document.getElementById(\'projection-opening\').scrollIntoView({behavior:\'smooth\'})">1 · פתיחה</button>'+
+      (Number(s.max_stage_opened||0)>=1?'<button onclick="document.getElementById(\'projection-calibration\')?.scrollIntoView({behavior:\'smooth\'})">2א · כיול</button><button onclick="document.getElementById(\'projection-samples\')?.scrollIntoView({behavior:\'smooth\'})">2ב · דגימות</button>':'')+
+      (Number(s.max_stage_opened||0)>=2&&quizData&&quizData.question?'<button onclick="document.getElementById(\'projection-quiz\')?.scrollIntoView({behavior:\'smooth\'})">3 · בדיקת ידע</button>':'')+
+      (Number(s.max_stage_opened||0)>=3&&groupWorkData?'<button onclick="document.getElementById(\'projection-group-work\')?.scrollIntoView({behavior:\'smooth\'})">4 · מסקנות וחקר</button>':'')+
+    '</nav>'+
     '<main class="projection-main">'+
       '<section id="projection-opening" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>מה חשבה הכיתה?</h2></div><strong class="projection-count">'+Number(survey.submitted_count||0)+' ענו</strong></div><div class="teacher-survey projection-survey"><div><span>פעם ביום</span><b>'+Number(surveyData.daily||0)+'</b></div><div><span>פעם בשבוע</span><b>'+Number(surveyData.weekly||0)+'</b></div><div><span>רק באירועים</span><b>'+Number(surveyData.events||0)+'</b></div><div><span>לא שותה ממותק</span><b>'+Number(surveyData.never||0)+'</b></div></div><div class="guess-averages projection-guesses"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+esc(guesses.cola??'—')+'</b></span><span>תפוזים <b>'+esc(guesses.orange??'—')+'</b></span><span>תה קר <b>'+esc(guesses.iced_tea??'—')+'</b></span><span>אנרגיה <b>'+esc(guesses.energy??'—')+'</b></span></div></div></section>'+
-      '<section id="projection-calibration" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 2 · כיול</span><h2>גרף הכיול הכיתתי</h2></div><p>הגרף מבוסס על ממוצעי הכיתה בלבד.</p></div>'+calibrationBlock+'</section>'+
-      projectionSampleSummaryHtml(data)+
-      projectionQuizHtml(quizData)+
-      projectionGroupWorkHtml(groupWorkData)+
+      (Number(s.max_stage_opened||0)>=1?'<section id="projection-calibration" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 2א · כיול</span><h2>גרף הכיול הכיתתי</h2></div><p>הגרף מבוסס על ממוצעי הכיתה בלבד.</p></div>'+calibrationBlock+'</section>'+projectionSampleSummaryHtml(data):'')+
+      (Number(s.max_stage_opened||0)>=2?projectionQuizHtml(quizData):'')+
+      (Number(s.max_stage_opened||0)>=3?projectionGroupWorkHtml(groupWorkData):'')+
     '</main>'+
   '</div>';
 }
@@ -1326,12 +1354,19 @@ async function dashboard(){
  try{data=await api("dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}
  catch(e){shell('<div class="card"><div class="error">לא הצלחתי לטעון את הדשבורד.</div></div>');return}
  const s=data.session;
+ let stageInfo={current_stage:Number(s.current_stage||0),max_stage_opened:Number(s.current_stage||0)};
+ try{
+   stageInfo=await api("teacher_stage_info",{session_id:t.session_id,teacher_token:t.teacher_token});
+ }catch(e){}
+ s.current_stage=Number(stageInfo.current_stage??s.current_stage??0);
+ s.max_stage_opened=Number(stageInfo.max_stage_opened??s.current_stage??0);
+ const maxStage=s.max_stage_opened;
  let quizData=null;
  let groupWorkData=null;
- if(Number(s.current_stage)===2){
+ if(maxStage>=2){
    try{quizData=await api("quiz_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
  }
- if(Number(s.current_stage)===3){
+ if(maxStage>=3){
    try{groupWorkData=await api("group_work_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
  }
  const projecting=document.body.classList.contains("projection-mode");
@@ -1346,12 +1381,12 @@ async function dashboard(){
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
  const stageNames=["פתיחה","ניסוי עצמאי","בדיקת ידע","מסקנות וחקר"];
  const actionHtml=s.current_stage===0
-   ? '<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>'
+   ? '<button class="btn primary" onclick="setStage(1)">'+(s.max_stage_opened>=1?'מעבר לניסוי':'פתיחת הניסוי')+'</button>'
    : s.current_stage===1
-   ? '<button class="btn primary" onclick="setStage(2)">פתחו את בדיקת הידע</button>'
+   ? '<button class="btn primary" onclick="setStage(2)">'+(s.max_stage_opened>=2?'מעבר לבדיקת הידע':'פתיחת בדיקת הידע')+'</button>'
    : s.current_stage===2
-   ? '<span class="phase-done">התקדמות השאלות נשלטת בכרטיס בדיקת הידע</span>'
-   : '<span class="phase-done">הכיתה עובדת על מסקנות ותכנון חקר המשך</span>';
+   ? '<span class="phase-done">התקדמות השאלות נשלטת בכרטיס בדיקת הידע · אפשר לחזור לכל שלב שכבר נפתח דרך הסרגל</span>'
+   : '<span class="phase-done">הכיתה עובדת על מסקנות ותכנון חקר המשך · אפשר לחזור לכל שלב שכבר נפתח דרך הסרגל</span>';
 
  const calibrationRows=(data.calibration_summary||[]).map(r=>{
    const avg=r.average_brix==null?'—':Number(r.average_brix).toFixed(2);
@@ -1369,7 +1404,7 @@ async function dashboard(){
 
  shell(
  '<div class="topbar"><button class="btn ghost top-exit" onclick="localStorage.removeItem(\'brix_teacher\');document.body.classList.remove(\'projection-mode\');go(\'home\')">יציאה</button><div class="top-brand">'+brand()+'</div><button class="btn projection-btn" onclick="toggleProjection()">'+(projecting?'יציאה מהקרנה':'מצב הקרנה')+'</button></div>'+
- lessonProgress(s.current_stage,s.current_stage,false)+
+ lessonProgress(s.max_stage_opened,s.current_stage,false)+
  '<div class="teacher-dashboard">'+
    '<aside class="teacher-side">'+
      '<div class="card qr-card compact-qr-card"><h3>כניסת תלמידים</h3><div class="compact-qr-body"><img src="'+qr+'" width="150" height="150" alt="QR לכניסת תלמידים"><div class="qr-meta"><div class="code">'+s.class_code+'</div><button id="copyJoinLinkBtn" class="copy-link-btn" onclick="copyJoinLink(window.__brixJoinUrl)">העתקת קישור</button><p>סריקה או קוד כיתה</p></div></div></div>'+
@@ -1379,8 +1414,8 @@ async function dashboard(){
      '<section class="card opening-live-card compact-opening-results stage-section stage-section-opening"><div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
      '<section class="card class-calibration-card stage-section stage-section-calibration"><div class="section-title-row"><div><span class="student-kicker">שלב 2 · כיול</span><h2>ממוצעי הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה. כל שורה הופכת לנקודה בגרף הכיתתי.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+
      teacherSampleGraphsHtml(data)+
-     (Number(s.current_stage)===2?teacherQuizHtml(quizData):'')+
-     (Number(s.current_stage)===3?teacherGroupWorkHtml(groupWorkData):'')+
+     (Number(s.max_stage_opened)>=2?teacherQuizHtml(quizData):'')+
+     (Number(s.max_stage_opened)>=3?teacherGroupWorkHtml(groupWorkData):'')+
      '<div class="card dashboard-summary progress-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
      '<section class="card groups-progress-card"><div class="section-title-row"><div><span class="student-kicker">בסוף · התקדמות הכיתה</span><h2>התקדמות הקבוצות</h2></div><p>כאן רואים מה כל קבוצה כבר ביצעה — לא מי מחובר.</p></div><div class="groups-progress-grid">'+groupCards+'</div></section>'+
    '</main>'+
