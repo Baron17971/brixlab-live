@@ -27,8 +27,8 @@ button{cursor:pointer}
 .login-live{position:absolute;inset:0;z-index:3;pointer-events:none}
 .login-live>*{pointer-events:auto}
 .live-input{
-  position:absolute;z-index:5;border:0;background:rgba(255,255,255,.98);
-  color:#173846;text-align:right;outline:none;padding:0 1.1vw;border-radius:14px;
+  position:absolute;z-index:5;border:0;background:rgba(255,255,255,.12);
+  color:#173846;text-align:right;outline:none;padding:0 3.6vw 0 1.1vw;border-radius:14px;
   box-shadow:none
 }
 .live-input:focus{box-shadow:0 0 0 3px rgba(26,142,161,.18)}
@@ -105,4 +105,9 @@ button{cursor:pointer}
   .brand{padding:8px}.logo{font-size:44px}.art{height:260px}
   .dashboard{grid-template-columns:1fr}.statgrid{grid-template-columns:1fr}
   .groups{grid-template-columns:1fr}.stage-row{grid-template-columns:repeat(2,1fr)}
+}
+.live-input::placeholder{color:#7b8da9;opacity:.95;font-weight:700}
+@media(max-width:850px){
+  .live-input{font-size:18px;background:rgba(255,255,255,.18)}
+  .student-live .code-input,.student-live .name-input{padding-right:12vw}
 }
