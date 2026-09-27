@@ -4161,3 +4161,22 @@ button{cursor:pointer}
     grid-template-columns:1fr;
   }
 }
+
+/* Ordered dynamic projection navigation + reopened-stage links */
+.projection-nav.projection-nav-dynamic{
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+}
+.opened-stage-links{
+  display:grid;
+  gap:9px;
+  margin:16px 0 8px;
+}
+.opened-stage-links .auth-primary,
+.opened-stage-links .auth-secondary{
+  width:100%;
+}
+@media(max-width:700px){
+  .projection-nav.projection-nav-dynamic{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
