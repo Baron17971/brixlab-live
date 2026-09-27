@@ -3449,3 +3449,84 @@ button{cursor:pointer}
     font-size:17px;
   }
 }
+
+/* Final responsive pass for teacher dashboard: wide desktop + mobile */
+@media(min-width:1280px){
+  .teacher-dashboard{
+    max-width:1440px;
+    grid-template-columns:320px minmax(0,1fr);
+    gap:22px;
+  }
+  .teacher-main{
+    gap:18px;
+  }
+  .teacher-group-sample-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+  }
+  .teacher-group-sample-graph,
+  .teacher-graph-card,
+  .class-calibration-card,
+  .groups-progress-card,
+  .teacher-sample-section{
+    min-width:0;
+  }
+  .teacher-group-sample-graph .sample-bar-chart svg,
+  .teacher-summary-sample-graph .sample-bar-chart svg{
+    min-width:0;
+  }
+}
+
+@media(max-width:850px){
+  .teacher-dashboard-shell,
+  .teacher-dashboard,
+  .teacher-main,
+  .teacher-side,
+  .teacher-main .card,
+  .teacher-side .card{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  .teacher-graph-card,
+  .teacher-sample-section,
+  .teacher-group-sample-graph,
+  .teacher-summary-sample-graph{
+    overflow:hidden !important;
+    min-width:0 !important;
+  }
+
+  .teacher-group-sample-grid{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+
+  .teacher-group-sample-graph{
+    padding:10px !important;
+  }
+
+  .teacher-group-sample-graph .sample-bar-chart,
+  .teacher-summary-sample-graph .sample-bar-chart,
+  .teacher-calibration-graph{
+    overflow:hidden !important;
+    width:100% !important;
+  }
+
+  .teacher-group-sample-graph .sample-bar-chart svg,
+  .teacher-summary-sample-graph .sample-bar-chart svg,
+  .teacher-calibration-graph svg{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+  }
+
+  .group-task-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  .teacher-live-points{
+    grid-template-columns:1fr !important;
+  }
+}
