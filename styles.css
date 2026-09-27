@@ -328,3 +328,45 @@ button{cursor:pointer}
   .auth-primary{min-height:50px;font-size:17px}
   .auth-secondary{min-height:48px;font-size:16px}
 }
+
+/* Further compact new-session card on mobile */
+@media(max-width:850px){
+  .new-session-card{
+    width:min(390px,76vw);
+    margin-top:34vh;
+    padding:16px 15px 14px;
+    border-radius:22px;
+  }
+  .new-session-card h1{
+    font-size:25px;
+    margin-bottom:10px;
+  }
+  .new-session-card .auth-subtitle{
+    font-size:14px;
+    line-height:1.35;
+    margin:-4px 0 10px;
+  }
+  .new-session-card .auth-field{
+    margin:6px 0;
+  }
+  .new-session-card .auth-field span{
+    font-size:12px;
+    margin-bottom:4px;
+  }
+  .new-session-card .auth-field input,
+  .new-session-card .auth-field select{
+    height:44px;
+    font-size:15px;
+    border-radius:14px;
+  }
+  .new-session-card .auth-primary{
+    min-height:46px;
+    margin-top:10px;
+    font-size:16px;
+    border-radius:15px;
+  }
+  .new-session-card .auth-link{
+    margin-top:10px;
+    font-size:14px;
+  }
+}
