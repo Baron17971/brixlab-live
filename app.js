@@ -995,6 +995,44 @@ function toggleTeacherEquation(){
   dashboard();
 }
 
+function projectionSampleSummaryHtml(data){
+  const agg=(data.sample_aggregate||[]).filter(x=>x.comparable);
+  if(!agg.length){
+    return '<section id="projection-samples" class="projection-section card"><span class="student-kicker">שלב 3 · בדיקת משקאות</span><h2>תוצאות כיתתיות</h2><div class="graph-waiting"><strong>עדיין אין נתונים משותפים להצגה</strong><span>גרף כיתתי יוצג רק כאשר הקבוצות מדדו את אותן דגימות באופן שניתן להשוואה.</span></div></section>';
+  }
+  const rows=agg.map(x=>({sample_name:x.sample_name,estimated_sugar:x.average_estimated_sugar}));
+  return '<section id="projection-samples" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 3 · בדיקת משקאות</span><h2>השוואת המשקאות — ממוצע כיתתי</h2></div><p>מוצגים רק נתונים מצרפיים של הכיתה, ללא שמות קבוצות או תלמידים.</p></div><div class="sample-bar-chart projection-bar-chart">'+sampleBarChartSvg(rows)+'</div></section>';
+}
+
+function teacherProjectionHtml(data){
+  const s=data.session;
+  const pts=teacherCalibrationPoints(data);
+  const graph=pts.length>=2
+    ? calibrationSvg(pts,window.__teacherTrendVisible,window.__teacherEquationVisible)
+    : '';
+  const model=pts.length>=2?linearModel(pts):null;
+  const survey=data.opening||{};
+  const surveyData=survey.survey||{};
+  const guesses=survey.guess_averages||{};
+  const calibrationBlock=pts.length>=2
+    ? '<div class="calibration-graph projection-calibration-graph">'+graph+'</div><div class="teacher-graph-actions projection-actions"><button class="btn '+(window.__teacherTrendVisible?'ghost':'primary')+'" onclick="toggleTeacherTrend()">'+(window.__teacherTrendVisible?'הסתרת קו מגמה':'הוספת קו מגמה')+'</button><button class="btn '+(window.__teacherEquationVisible?'ghost':'primary')+'" onclick="toggleTeacherEquation()" '+(!window.__teacherTrendVisible?'disabled':'')+'>'+(window.__teacherEquationVisible?'הסתרת המשוואה':'הצגת משוואת הישר')+'</button></div>'+(window.__teacherEquationVisible&&model?'<div class="projection-equation">y = '+model.a.toFixed(2)+'x '+(model.b<0?'−':'+')+' '+Math.abs(model.b).toFixed(2)+'</div>':'')
+    : '<div class="graph-waiting"><strong>הגרף הכיתתי עדיין נבנה</strong><span>ככל שהקבוצות שומרות מדידות, הנתונים הכיתתיים יתעדכנו כאן.</span></div>';
+
+  return '<div class="projection-shell">'+
+    '<header class="projection-header"><button class="btn ghost projection-exit" onclick="toggleProjection()">יציאה מהקרנה</button>'+brand()+'<div class="projection-class">'+esc(s.class_name||'')+'</div></header>'+
+    '<nav class="projection-nav"><button onclick="document.getElementById(\'projection-opening\').scrollIntoView({behavior:\'smooth\'})">1 · פתיחה</button><button onclick="document.getElementById(\'projection-calibration\').scrollIntoView({behavior:\'smooth\'})">2 · כיול</button><button onclick="document.getElementById(\'projection-samples\').scrollIntoView({behavior:\'smooth\'})">3 · משקאות</button></nav>'+
+    '<main class="projection-main">'+
+      '<section id="projection-opening" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>מה חשבה הכיתה?</h2></div><strong class="projection-count">'+Number(survey.submitted_count||0)+' ענו</strong></div><div class="teacher-survey projection-survey"><div><span>פעם ביום</span><b>'+Number(surveyData.daily||0)+'</b></div><div><span>פעם בשבוע</span><b>'+Number(surveyData.weekly||0)+'</b></div><div><span>רק באירועים</span><b>'+Number(surveyData.events||0)+'</b></div><div><span>לא שותה ממותק</span><b>'+Number(surveyData.never||0)+'</b></div></div><div class="guess-averages projection-guesses"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+esc(guesses.cola??'—')+'</b></span><span>תפוזים <b>'+esc(guesses.orange??'—')+'</b></span><span>תה קר <b>'+esc(guesses.iced_tea??'—')+'</b></span><span>אנרגיה <b>'+esc(guesses.energy??'—')+'</b></span></div></div></section>'+
+      '<section id="projection-calibration" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 2 · כיול</span><h2>גרף הכיול הכיתתי</h2></div><p>הגרף מבוסס על ממוצעי הכיתה בלבד.</p></div>'+calibrationBlock+'</section>'+
+      projectionSampleSummaryHtml(data)+
+    '</main>'+
+  '</div>';
+}
+
+function renderTeacherProjection(data){
+  shell(teacherProjectionHtml(data),"teacher-projection-shell");
+}
+
 async function dashboard(){
  const t=JSON.parse(localStorage.getItem("brix_teacher")||"null");
  if(!t){go("new-session");return}
@@ -1002,10 +1040,16 @@ async function dashboard(){
  try{data=await api("dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}
  catch(e){shell('<div class="card"><div class="error">לא הצלחתי לטעון את הדשבורד.</div></div>');return}
  const s=data.session;
+ const projecting=document.body.classList.contains("projection-mode");
+ if(projecting){
+   renderTeacherProjection(data);
+   clearTimeout(window.__brixTimer);
+   window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")&&document.body.classList.contains("projection-mode")) dashboard();},5000);
+   return;
+ }
  const joinUrl=location.origin+location.pathname+'#student?code='+encodeURIComponent(s.class_code);
  window.__brixJoinUrl=joinUrl;
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
- const projecting=document.body.classList.contains("projection-mode");
  const stageNames=["פתיחה","ניסוי עצמאי","סיכום כיתתי","רפלקציה"];
  const actionHtml=s.current_stage===0
    ? '<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>'
