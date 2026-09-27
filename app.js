@@ -46,15 +46,66 @@ async function joinClass(){
   localStorage.setItem("brix_student",JSON.stringify(data)); go("student-room");
  }catch(e){msg.innerHTML='<div class="floating-error">לא ניתן להצטרף. בדקו את קוד הכיתה ואת מספר הקבוצה שהמורה הקצתה.</div>'}
 }
-function studentRoom(){
+async function studentRoom(){
  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
  if(!s){go("student");return}
- imageScreen(
-   "student-room-screen clean-login-screen",
-   "/public/screens/brixlab-desktop.png",
-   "/public/screens/brixlab-mobile.png",
-   '<div class="auth-wrap"><div class="auth-card waiting-card"><h1>ברוך הבא, '+esc(s.first_name)+'</h1><p class="room-meta">'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="room-note">נכנסת בהצלחה. ממתינים לפתיחת השלב הראשון.</div><button class="auth-link exit-link" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div>'
- );
+ let state;
+ try{state=await api("student_state",{student_id:s.student_id})}
+ catch(e){go("student");return}
+
+ if(state.current_stage===0 && !state.opening_submitted){
+   studentOpening(s);
+   return;
+ }
+
+ if(state.current_stage===0 && state.opening_submitted){
+   imageScreen(
+     "student-room-screen clean-login-screen",
+     "/public/screens/brixlab-desktop.png",
+     "/public/screens/brixlab-mobile.png",
+     '<div class="auth-wrap"><div class="auth-card waiting-card opening-wait"><h1>סיימנו את הפתיחה ✓</h1><p class="room-meta">'+esc(s.class_name)+' · '+esc(s.group_name)+'</p><div class="room-note">התשובות נקלטו. ממתינים לפתיחת הניסוי.</div><div class="wait-pulse"><span></span><span></span><span></span></div><button class="auth-link exit-link" onclick="localStorage.removeItem(\'brix_student\');go(\'home\')">יציאה</button></div></div>'
+   );
+   clearTimeout(window.__studentTimer);
+   window.__studentTimer=setTimeout(()=>{if(location.hash.startsWith("#student-room"))studentRoom()},3000);
+   return;
+ }
+
+ shell('<div class="student-lab-shell"><div class="student-lab-top">'+brand()+'</div><div class="card student-next-card"><span class="student-kicker">הניסוי נפתח</span><h1>מוכנים להתחיל?</h1><p>הפתיחה הסתיימה. מכאן תתקדמו בקצב הקבוצה לאורך רצף הניסוי.</p><button class="btn primary" disabled>רצף הניסוי ייפתח בשלב הבא</button></div></div>');
+}
+
+function studentOpening(s){
+ shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header><main class="student-opening-main"><section class="opening-card"><div class="opening-step">1 מתוך 2</div><h1>מה שותים אצלכם בבית?</h1><p>באיזו תדירות שותים משקאות ממותקים אצלך בבית?</p><div class="survey-options">'+[
+   ["daily","פעם ביום"],
+   ["weekly","פעם בשבוע"],
+   ["events","רק באירועים מיוחדים"],
+   ["never","לא שותה ממותק"]
+ ].map(([v,l])=>'<label class="survey-choice"><input type="radio" name="survey" value="'+v+'"><span>'+l+'</span></label>').join("")+'</div></section><section class="opening-card guess-card"><div class="opening-step">2 מתוך 2</div><h2>ניחוש מתוק</h2><p>כמה כפיות סוכר לדעתכם יש ב־500 מ״ל? זה רק ניחוש — אין תשובה נכונה בשלב הזה.</p><div class="guess-grid">'+[
+   ["cola","משקה קולה"],
+   ["orange","משקה תפוזים"],
+   ["iced_tea","תה קר"],
+   ["energy","משקה אנרגיה"]
+ ].map(([k,l])=>'<label class="guess-item"><span>'+l+'</span><div><input id="guess_'+k+'" type="range" min="0" max="20" step="1" value="8" oninput="document.getElementById(\'val_'+k+'\').textContent=this.value"><b id="val_'+k+'">8</b><small> כפיות</small></div></label>').join("")+'</div><div id="openingMsg"></div><button class="btn primary opening-submit" onclick="submitOpening()">שליחת התשובות</button></section></main></div>');
+}
+
+async function submitOpening(){
+ const s=JSON.parse(localStorage.getItem("brix_student")||"null");
+ if(!s)return;
+ const survey=document.querySelector('input[name="survey"]:checked')?.value;
+ const msg=document.getElementById("openingMsg");
+ if(!survey){msg.innerHTML='<div class="inline-error">יש לבחור תשובה בסקר.</div>';return}
+ const guesses={
+   cola:Number(document.getElementById("guess_cola").value),
+   orange:Number(document.getElementById("guess_orange").value),
+   iced_tea:Number(document.getElementById("guess_iced_tea").value),
+   energy:Number(document.getElementById("guess_energy").value)
+ };
+ msg.innerHTML='<div class="inline-error neutral">שולח...</div>';
+ try{
+   await api("submit_opening",{student_id:s.student_id,survey_option:survey,guesses});
+   studentRoom();
+ }catch(e){
+   msg.innerHTML='<div class="inline-error">לא הצלחנו לשמור. נסו שוב.</div>';
+ }
 }
 
 function teacherLogin(){
@@ -178,7 +229,7 @@ async function dashboard(){
  const joinUrl=location.origin+location.pathname+'#student?code='+encodeURIComponent(s.class_code);
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
  const projecting=document.body.classList.contains("projection-mode");
- shell('<div class="topbar"><button class="btn ghost top-exit" onclick="localStorage.removeItem(\'brix_teacher\');document.body.classList.remove(\'projection-mode\');go(\'home\')">יציאה</button><div class="top-brand">'+brand()+'</div><button class="btn projection-btn" onclick="toggleProjection()">'+(projecting?'יציאה מהקרנה':'מצב הקרנה')+'</button></div><div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card phase-card"><h3>מהלך השיעור</h3><div class="phase-grid">'+["פתיחה","ניסוי עצמאי","סיכום כיתתי","רפלקציה"].map((x,i)=>'<div class="phase '+(i===s.current_stage?'active':'')+'"><span class="phase-num">'+(i+1)+'</span><span>'+x+'</span></div>').join("")+'</div><div class="experiment-flow"><strong>בתוך הניסוי:</strong><span>רפרקטומטר</span><span>כיול</span><span>חקר</span><span>השוואה</span><span>תכן</span></div><div class="phase-actions">'+(s.current_stage===0?'<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>':s.current_stage===1?'<button class="btn primary" onclick="setStage(2)">עברו לסיכום</button>':s.current_stage===2?'<button class="btn primary" onclick="setStage(3)">פתחו רפלקציה</button>':'<span class="phase-done">השיעור בשלב הרפלקציה</span>')+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · '+esc(s.teacher_name||"מורה")+'</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div><div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>');
+ shell('<div class="topbar"><button class="btn ghost top-exit" onclick="localStorage.removeItem(\'brix_teacher\');document.body.classList.remove(\'projection-mode\');go(\'home\')">יציאה</button><div class="top-brand">'+brand()+'</div><button class="btn projection-btn" onclick="toggleProjection()">'+(projecting?'יציאה מהקרנה':'מצב הקרנה')+'</button></div><div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card phase-card"><h3>מהלך השיעור</h3><div class="phase-grid">'+["פתיחה","ניסוי עצמאי","סיכום כיתתי","רפלקציה"].map((x,i)=>'<div class="phase '+(i===s.current_stage?'active':'')+'"><span class="phase-num">'+(i+1)+'</span><span>'+x+'</span></div>').join("")+'</div><div class="experiment-flow"><strong>בתוך הניסוי:</strong><span>רפרקטומטר</span><span>כיול</span><span>חקר</span><span>השוואה</span><span>תכן</span></div><div class="phase-actions">'+(s.current_stage===0?'<button class="btn primary" onclick="setStage(1)">פתחו את הניסוי</button>':s.current_stage===1?'<button class="btn primary" onclick="setStage(2)">עברו לסיכום</button>':s.current_stage===2?'<button class="btn primary" onclick="setStage(3)">פתחו רפלקציה</button>':'<span class="phase-done">השיעור בשלב הרפלקציה</span>')+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · '+esc(s.teacher_name||"מורה")+'</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div>'+(s.current_stage===0?'<div class="card opening-live-card"><div class="opening-live-head"><div><span class="student-kicker">פתיחה כיתתית</span><h2>סקר + ניחוש מתוק</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div><p class="opening-note">אין חשיפת תשובות באפליקציה בשלב זה — הדיון והעובדות נשארים במליאה דרך המצגת.</p></div>':'')+'<div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>');
  clearTimeout(window.__brixTimer);
  window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")) dashboard();},5000);
 }
