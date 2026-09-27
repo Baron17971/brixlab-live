@@ -244,10 +244,34 @@ async function saveCalibration(){
   }
 }
 
+function variableOptionButtons(key,options){
+  return options
+    .map(o=>({o,sort:Math.random()}))
+    .sort((a,b)=>a.sort-b.sort)
+    .map(({o})=>'<button onclick="answerVariable(this,&quot;'+key+'&quot;,&quot;'+o.value+'&quot;,'+o.correct+')">'+o.label+'</button>')
+    .join('');
+}
+
 function renderCalibrationDone(s,state){
   const stateStage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
   window.__brixModelState=state;
-  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3><button onclick="answerVariable(this,&quot;x&quot;,&quot;ריכוז הסוכר בתמיסה&quot;,true)">ריכוז הסוכר בתמיסה</button><button onclick="answerVariable(this,&quot;x&quot;,&quot;ריכוז המומסים ב־Brix&quot;,false)">ריכוז המומסים ב־Brix</button></div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3><button onclick="answerVariable(this,&quot;y&quot;,&quot;ריכוז המומסים הנמדד ברפרקטומטר&quot;,true)">ריכוז המומסים הנמדד ברפרקטומטר</button><button onclick="answerVariable(this,&quot;y&quot;,&quot;ריכוז הסוכר שהכנו&quot;,false)">ריכוז הסוכר שהכנו</button></div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3><button onclick="answerVariable(this,&quot;xu&quot;,&quot;גרם סוכר ל־100 מ״ל&quot;,true)">גרם סוכר ל־100 מ״ל</button><button onclick="answerVariable(this,&quot;xu&quot;,&quot;°Brix&quot;,false)">°Brix</button></div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3><button onclick="answerVariable(this,&quot;yu&quot;,&quot;°Brix&quot;,true)">°Brix</button><button onclick="answerVariable(this,&quot;yu&quot;,&quot;גרם/100 מ״ל&quot;,false)">גרם/100 מ״ל</button></div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showCalibrationTable()" disabled>הצגת טבלת הנתונים</button></section></main></div>');
+  const q1=variableOptionButtons('x',[
+    {label:'ריכוז הסוכר בתמיסה',value:'ריכוז הסוכר בתמיסה',correct:true},
+    {label:'ריכוז המומסים ב־Brix',value:'ריכוז המומסים ב־Brix',correct:false}
+  ]);
+  const q2=variableOptionButtons('y',[
+    {label:'ריכוז המומסים הנמדד ברפרקטומטר',value:'ריכוז המומסים הנמדד ברפרקטומטר',correct:true},
+    {label:'ריכוז הסוכר שהכנו',value:'ריכוז הסוכר שהכנו',correct:false}
+  ]);
+  const q3=variableOptionButtons('xu',[
+    {label:'גרם סוכר ל־100 מ״ל',value:'גרם סוכר ל־100 מ״ל',correct:true},
+    {label:'°Brix',value:'°Brix',correct:false}
+  ]);
+  const q4=variableOptionButtons('yu',[
+    {label:'°Brix',value:'°Brix',correct:true},
+    {label:'גרם/100 מ״ל',value:'גרם/100 מ״ל',correct:false}
+  ]);
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stateStage,1,true)+'<main class="model-main"><section class="model-card card"><span class="student-kicker">מהמדידה למודל</span><h1>לפני שבונים גרף — מה באמת בדקנו?</h1><p class="model-lead">בכיול שינינו דבר אחד ובדקנו כיצד המדידה משתנה בעקבותיו.</p><div class="variable-quiz"><div class="quiz-card"><h3>מהו המשתנה הבלתי־תלוי?</h3>'+q1+'</div><div class="quiz-card"><h3>מהו המשתנה התלוי?</h3>'+q2+'</div><div class="quiz-card"><h3>מה היחידות של ריכוז הסוכר?</h3>'+q3+'</div><div class="quiz-card"><h3>מה היחידות של מדידת המומסים?</h3>'+q4+'</div></div><div id="variableQuizMsg"></div><button id="toAxesBtn" class="btn primary experiment-main-btn" onclick="showCalibrationTable()" disabled>הצגת טבלת הנתונים</button></section></main></div>');
 }
 
 window.__variableAnswers={};
