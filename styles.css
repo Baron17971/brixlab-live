@@ -3530,3 +3530,51 @@ button{cursor:pointer}
     grid-template-columns:1fr !important;
   }
 }
+
+/* Teacher dashboard lesson-order hierarchy */
+.stage-section{
+  position:relative;
+}
+.stage-section-opening{
+  order:1;
+}
+.stage-section-calibration{
+  order:2;
+}
+.teacher-graph-card{
+  order:3;
+}
+.teacher-sample-section{
+  order:4;
+}
+.progress-summary{
+  order:90;
+}
+.groups-progress-card{
+  order:91;
+}
+
+@media(max-width:850px){
+  .teacher-main{
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  .teacher-main .stage-section-opening{
+    order:1 !important;
+  }
+  .teacher-main .stage-section-calibration{
+    order:2 !important;
+  }
+  .teacher-main .teacher-graph-card{
+    order:3 !important;
+  }
+  .teacher-main .teacher-sample-section{
+    order:4 !important;
+  }
+  .teacher-main .progress-summary{
+    order:90 !important;
+  }
+  .teacher-main .groups-progress-card{
+    order:91 !important;
+  }
+}
