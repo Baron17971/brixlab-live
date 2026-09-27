@@ -4003,7 +4003,6 @@ button{cursor:pointer}
 .quiz-summary-row{display:grid;grid-template-columns:80px 1fr 120px;gap:10px;align-items:center}
 .quiz-summary-row>div{height:10px;background:#edf1f2;border-radius:999px;overflow:hidden}
 .quiz-summary-row i{display:block;height:100%;background:#62bdb5;border-radius:999px}
-.projection-quiz-card{order:-1}
 .projection-quiz-card h2{font-size:clamp(28px,3.5vw,46px)}
 .quiz-projection-wait{padding:34px;text-align:center}
 .quiz-projection-wait strong{display:block;font-size:clamp(24px,3vw,38px);color:var(--navy)}
@@ -4073,9 +4072,6 @@ button{cursor:pointer}
 }
 .projection-nav.projection-nav-four{
   grid-template-columns:repeat(4,1fr);
-}
-.projection-group-work-card{
-  order:-1;
 }
 .projection-group-progress{
   display:grid;
