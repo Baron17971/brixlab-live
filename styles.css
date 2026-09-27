@@ -1057,16 +1057,17 @@ button{cursor:pointer}
   }
 }
 
-/* Student opening: supplied photo background */
+/* Student opening: supplied responsive backgrounds */
 .student-opening-shell{
   background:
-    linear-gradient(180deg,rgba(234,247,250,.10),rgba(255,250,239,.16)),
-    url("/public/screens/opening-bg.jpg") center center / cover fixed no-repeat !important;
+    linear-gradient(180deg,rgba(234,247,250,.08),rgba(255,250,239,.12)),
+    url("/public/screens/bg-desktop.png") center center / cover fixed no-repeat !important;
 }
 @media(max-width:850px){
   .student-opening-shell{
-    background-position:center top !important;
-    background-attachment:fixed !important;
+    background:
+      linear-gradient(180deg,rgba(234,247,250,.05),rgba(255,250,239,.10)),
+      url("/public/screens/bg-mobile.png") center top / cover fixed no-repeat !important;
   }
   .opening-card{
     background:rgba(255,255,255,.88);
