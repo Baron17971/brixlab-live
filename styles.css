@@ -612,3 +612,112 @@ button{cursor:pointer}
     min-height:auto;
   }
 }
+
+/* Dashboard header polish + projection mode */
+.topbar{
+  max-width:1220px;
+  margin:0 auto 18px;
+  min-height:132px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.top-brand{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  pointer-events:none;
+}
+.topbar .brand-image{
+  padding:0;
+}
+.topbar .brand-image img{
+  width:min(660px,58vw);
+  max-height:185px;
+}
+.top-exit,
+.projection-btn{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:3;
+  min-width:112px;
+}
+.top-exit{left:0;}
+.projection-btn{
+  right:0;
+  background:var(--navy);
+  color:#fff;
+}
+.projection-btn:hover{filter:brightness(1.04)}
+
+.projection-mode .shell:not(.image-shell){
+  padding:14px 18px 24px;
+}
+.projection-mode .topbar{
+  max-width:none;
+  min-height:150px;
+  margin-bottom:12px;
+}
+.projection-mode .topbar .brand-image img{
+  width:min(760px,62vw);
+  max-height:210px;
+}
+.projection-mode .top-exit{display:none}
+.projection-mode .dashboard{
+  max-width:none;
+  grid-template-columns:330px minmax(0,1fr);
+  gap:20px;
+}
+.projection-mode .card{
+  border-radius:24px;
+  padding:24px;
+}
+.projection-mode .qr-card img{
+  width:220px;
+  height:220px;
+}
+.projection-mode .code{
+  font-size:42px;
+}
+.projection-mode .stat .n{
+  font-size:36px;
+}
+.projection-mode .stage{
+  font-size:18px;
+  padding:16px 12px;
+}
+
+@media(max-width:850px){
+  .topbar{
+    min-height:128px;
+    margin-bottom:12px;
+  }
+  .topbar .brand-image img{
+    width:min(470px,76vw);
+    max-height:138px;
+  }
+  .top-exit,
+  .projection-btn{
+    top:auto;
+    bottom:0;
+    transform:none;
+    min-width:auto;
+    padding:9px 12px;
+    border-radius:13px;
+    font-size:13px;
+  }
+  .top-exit{left:2px;}
+  .projection-btn{right:2px;}
+  .projection-mode .topbar{
+    min-height:132px;
+  }
+  .projection-mode .topbar .brand-image img{
+    width:min(500px,82vw);
+    max-height:146px;
+  }
+  .projection-mode .dashboard{
+    grid-template-columns:1fr;
+  }
+}
