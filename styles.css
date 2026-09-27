@@ -1880,3 +1880,55 @@ button{cursor:pointer}
     grid-template-columns:1fr 1fr;
   }
 }
+
+/* Calibration measurements */
+.calibration-main{max-width:860px;margin:0 auto}
+.calibration-card{
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-radius:26px;
+  padding:24px;
+}
+.calibration-card h1{margin:7px 0 10px;color:var(--navy)}
+.calibration-lead{color:var(--muted);line-height:1.6;margin:0 0 14px}
+.calibration-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:16px;
+}
+.calibration-input{
+  display:block;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fff;
+}
+.calibration-input>span{
+  display:block;
+  margin-bottom:8px;
+  color:var(--ink);
+  font-weight:900;
+}
+.calibration-input>div{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.calibration-input input{
+  width:100%;
+  padding:12px 10px;
+  border:1.5px solid #bfd8dd;
+  border-radius:12px;
+  text-align:center;
+  font-weight:900;
+  font-size:18px;
+  color:var(--navy);
+}
+.calibration-input strong{white-space:nowrap;color:var(--navy)}
+@media(max-width:850px){
+  .calibration-card{padding:18px;border-radius:22px}
+  .calibration-card h1{font-size:25px}
+  .calibration-grid{grid-template-columns:1fr 1fr;gap:10px}
+}
