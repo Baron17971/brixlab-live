@@ -3675,3 +3675,36 @@ button{cursor:pointer}
     grid-template-columns:1fr;
   }
 }
+
+/* Calibration quality feedback */
+.calibration-quality-stop,
+.calibration-quality-warn{
+  margin:14px 0;
+  padding:14px 15px;
+  border-radius:16px;
+  line-height:1.5;
+}
+.calibration-quality-stop{
+  background:#fff1ee;
+  border:1px solid #efb8ad;
+  color:#8d3e34;
+}
+.calibration-quality-warn{
+  background:#fff8e8;
+  border:1px solid #efd69c;
+  color:#7e5b16;
+}
+.calibration-quality-stop strong,
+.calibration-quality-warn strong{
+  display:block;
+  margin-bottom:4px;
+  color:inherit;
+}
+.calibration-quality-stop p,
+.calibration-quality-warn p{
+  margin:0 0 4px;
+}
+.calibration-quality-stop span{
+  font-size:11px;
+  opacity:.86;
+}
