@@ -721,3 +721,79 @@ button{cursor:pointer}
     grid-template-columns:1fr;
   }
 }
+
+/* Four macro lesson phases: teacher controls only the meaningful transitions */
+.phase-card h3{margin-top:0}
+.phase-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:9px;
+}
+.phase{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-radius:15px;
+  background:#eef7f7;
+  border:1px solid var(--line);
+  font-weight:800;
+}
+.phase.active{
+  background:var(--navy);
+  color:#fff;
+}
+.phase-num{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.72);
+  color:var(--navy);
+  font-size:13px;
+  flex:0 0 auto;
+}
+.phase.active .phase-num{
+  background:#fff;
+}
+.experiment-flow{
+  margin-top:14px;
+  padding:12px 13px;
+  border-radius:14px;
+  background:#f8fbfb;
+  border:1px dashed #c7dfe2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  align-items:center;
+  font-size:13px;
+  color:#46616b;
+}
+.experiment-flow strong{
+  color:var(--ink);
+  margin-left:2px;
+}
+.experiment-flow span{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:5px 8px;
+  white-space:nowrap;
+}
+.phase-actions{
+  margin-top:14px;
+}
+.phase-actions .btn{
+  width:100%;
+}
+.phase-done{
+  display:block;
+  text-align:center;
+  padding:10px;
+  border-radius:12px;
+  background:#eef8f8;
+  color:#246b76;
+  font-weight:800;
+}
