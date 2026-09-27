@@ -3928,3 +3928,33 @@ button{cursor:pointer}
     max-width:none;
   }
 }
+
+/* Shared group data locking */
+.locked-by-member{
+  position:relative;
+  opacity:.92;
+}
+.locked-by-member input:disabled{
+  background:#f3f5f6!important;
+  color:#44515b!important;
+  cursor:not-allowed;
+  opacity:1!important;
+}
+.group-field-lock,
+.group-field-owner{
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:11px;
+  font-size:11px;
+  line-height:1.4;
+}
+.group-field-lock{
+  background:#eef3f5;
+  border:1px solid #d7e0e4;
+  color:#52616a;
+}
+.group-field-owner{
+  background:#eef9f5;
+  border:1px solid #cde8dc;
+  color:#376b5b;
+}
