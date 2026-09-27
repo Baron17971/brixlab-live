@@ -20,8 +20,8 @@ function imageScreen(kind, desktop, mobile, overlay){
 function home(){
   imageScreen(
     "home-screen",
-    "/public/screens/home-brixlab-desktop.png",
-    "/public/screens/home-brixlab-mobile.png",
+    "/public/screens/home-brixlab-desktop1.png",
+    "/public/screens/home-brixlab-mobile1.png",
     '<div class="home-hotspots"><button aria-label="כניסת תלמיד" class="hotspot student-hotspot" onclick="go(\'student\')"></button><button aria-label="כניסת מורה" class="hotspot teacher-hotspot" onclick="go(\'teacher\')"></button></div>'
   );
 }
@@ -29,8 +29,8 @@ function home(){
 function studentLogin(){
   imageScreen(
     "student-login-screen",
-    "/public/screens/student-login-desktop.png",
-    "/public/screens/student-login-mobile..png",
+    "/public/screens/student-login-desktop1.png",
+    "/public/screens/student-login-mobile1.png",
     '<div class="login-live student-live"><div id="msg"></div><input id="classCode" class="live-input code-input" inputmode="numeric" maxlength="6" aria-label="קוד כיתה"><input id="firstName" class="live-input name-input" aria-label="שם פרטי"><button class="live-submit" aria-label="נכנסים למעבדה" onclick="joinClass()"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
   );
 }
@@ -54,8 +54,8 @@ function studentRoom(){
 function teacherLogin(){
   imageScreen(
     "teacher-login-screen",
-    "/public/screens/teacher-login-desktop.png",
-    "/public/screens/teacher-login-mobile..png",
+    "/public/screens/teacher-login-desktop1.png",
+    "/public/screens/teacher-login-mobile1.png",
     '<div class="login-live teacher-live"><button class="live-teacher-new" aria-label="פתיחת שיעור חדש" onclick="go(\'new-session\')"></button><button class="live-teacher-existing" aria-label="כניסה לשיעור קיים" onclick="go(\'new-session\')"></button><button class="live-back" aria-label="חזרה למסך הבית" onclick="go(\'home\')"></button></div>'
   );
 }
