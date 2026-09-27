@@ -431,3 +431,162 @@ button{cursor:pointer}
   }
   .topbar>.btn{left:4px}
 }
+
+/* FINAL mobile layout normalization: full 9:16 background, fixed, no letterboxing */
+@media(max-width:850px){
+  html,body,#app,.image-shell,.image-screen{
+    width:100%;
+    height:100%;
+    min-height:100dvh;
+    overflow:hidden;
+  }
+
+  .image-screen{
+    position:relative;
+    background:transparent;
+  }
+
+  .screen-picture{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100dvh !important;
+    overflow:hidden;
+    background:transparent !important;
+  }
+
+  .screen-picture img{
+    width:100vw !important;
+    height:100dvh !important;
+    object-fit:fill !important;
+    object-position:center center !important;
+    display:block;
+  }
+
+  .auth-wrap{
+    position:absolute;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:0 !important;
+    overflow:hidden;
+  }
+
+  .auth-card{
+    width:min(390px,78vw) !important;
+    padding:17px 16px 15px !important;
+    border-radius:22px !important;
+    margin-top:35vh !important;
+    max-height:61vh;
+    overflow:auto;
+  }
+
+  .student-login-screen .auth-card{
+    width:min(395px,79vw) !important;
+    margin-top:33.5vh !important;
+  }
+
+  .teacher-auth-card{
+    width:min(370px,74vw) !important;
+    margin-top:35vh !important;
+  }
+
+  .teacher-menu-card{
+    width:min(360px,72vw) !important;
+    margin-top:36vh !important;
+  }
+
+  .new-session-card{
+    width:min(370px,74vw) !important;
+    margin-top:35.5vh !important;
+  }
+
+  .waiting-card{
+    width:min(360px,72vw) !important;
+    margin-top:36vh !important;
+  }
+
+  .existing-session-screen .auth-card{
+    width:min(370px,74vw) !important;
+    margin-top:35.5vh !important;
+  }
+
+  .auth-card h1{
+    font-size:25px !important;
+    margin:0 0 10px !important;
+  }
+
+  .auth-subtitle{
+    font-size:13px !important;
+    line-height:1.35;
+    margin:-2px 0 9px !important;
+  }
+
+  .auth-field{
+    margin:6px 0 !important;
+  }
+
+  .auth-field span{
+    font-size:12px !important;
+    margin:0 6px 4px !important;
+  }
+
+  .auth-field input,
+  .auth-field select{
+    height:43px !important;
+    border-radius:14px !important;
+    font-size:15px !important;
+    padding:0 14px !important;
+  }
+
+  .auth-primary{
+    min-height:45px !important;
+    margin-top:9px !important;
+    border-radius:15px !important;
+    font-size:16px !important;
+  }
+
+  .auth-secondary{
+    min-height:44px !important;
+    margin-top:7px !important;
+    border-radius:15px !important;
+    font-size:15px !important;
+  }
+
+  .auth-link{
+    margin-top:9px !important;
+    font-size:13px !important;
+  }
+
+  .room-note{
+    padding:12px 14px !important;
+    font-size:14px !important;
+    border-radius:14px !important;
+  }
+
+  .room-meta{
+    font-size:14px !important;
+    margin:-2px 0 10px !important;
+  }
+}
+
+/* desktop image-backed screens fill their viewport cleanly */
+@media(min-width:851px){
+  .image-shell,.image-screen{
+    min-height:100vh;
+    overflow:hidden;
+  }
+  .screen-picture{
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100vh;
+  }
+  .screen-picture img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center;
+  }
+}
