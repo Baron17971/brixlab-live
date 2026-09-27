@@ -50,7 +50,7 @@ function lessonProgress(current,active,onStudent=false){
     const cls=['lesson-step',unlocked?'unlocked':'locked',i===active?'active':''].filter(Boolean).join(' ');
     const action=unlocked
       ? (onStudent
-          ? (i===0?' onclick="showStudentOpeningReview()"':i===1?' onclick="showStudentExperiment()"':'')
+          ? (i===0?' onclick="showStudentOpeningReview()"':i===1?' onclick="showStudentExperiment()"':i===2?' onclick="studentQuiz()"':i===3?' onclick="studentGroupWrap(renderGroupConclusions)"':'')
           : '')
       : '';
     const status=i===active?'כעת':unlocked?'פתוח':'טרם נפתח';
@@ -101,8 +101,8 @@ const BRIX_QUIZ_QUESTIONS=[
   {q:"למה בנינו גרף כיול לפני שבדקנו משקאות לא ידועים?",options:{A:"כדי להשוות בין צבעי המשקאות",B:"כדי ליצור קשר בין ערך Brix לבין ריכוז סוכר ידוע",C:"כדי לחשב את נפח המשקה",D:"כדי לבדוק אם הרפרקטומטר עובד מהר יותר"},correct:"B",note:"גרף הכיול מאפשר להשתמש במדידת Brix של דגימה לא ידועה כדי לאמוד את ריכוז הסוכר שלה."},
   {q:"במשוואה y = ax + b, מה מייצג y בניסוי שלנו?",options:{A:"ריכוז הסוכר המשוער",B:"ערך ה־Brix שנמדד",C:"מספר הדגימה",D:"נפח המשקה"},correct:"B",note:"במודל שלנו y הוא ערך ה־Brix הנמדד, ואילו x הוא ריכוז הסוכר."},
   {q:"מדדנו משקה לא ידוע וקיבלנו ערך Brix. מה אנחנו רוצים לחשב באמצעות משוואת הכיול?",options:{A:"את y מחדש",B:"את x — ריכוז הסוכר המשוער",C:"את נפח המשקה",D:"את טמפרטורת המשקה"},correct:"B",note:"מציבים את ערך ה־Brix במקום y ומבודדים את x כדי לקבל אומדן לריכוז הסוכר."},
-  {q:"למה מתאים גרף עמודות להשוואה בין המשקאות שבדקנו?",options:{A:"כי סוג המשקה הוא משתנה בדיד",B:"כי Brix תמיד חייב להיות מספר שלם",C:"כי כל המדידות זהות",D:"כי אי אפשר להשתמש בציר y"},correct:"A",note:"סוג המשקה הוא קטגוריה בדידה, ולכן גרף עמודות מתאים להשוואה בין הקטגוריות."},
-  {q:"משקה מסוים נתן ערך Brix גבוה. מה אפשר להסיק בביטחון?",options:{A:"שיש בו בהכרח רק הרבה סוכר",B:"שיש בו ריכוז גבוה יחסית של חומרים מומסים",C:"שאין בו סוכר בכלל",D:"שכל החומרים המומסים בו הם גלוקוז"},correct:"B",note:"הרפרקטומטר מודד את כלל החומרים המומסים, ולכן אי אפשר להסיק שכל האות הוא סוכר בלבד."}
+  {q:"למה מתאים גרף עמודות להשוואה בין הדגימות שבדקנו?",options:{A:"כי סוג הדגימה הוא משתנה בדיד",B:"כי Brix תמיד חייב להיות מספר שלם",C:"כי כל המדידות זהות",D:"כי אי אפשר להשתמש בציר y"},correct:"A",note:"סוג הדגימה הוא קטגוריה בדידה, ולכן גרף עמודות מתאים להשוואה בין הקטגוריות."},
+  {q:"דגימה מסוימת נתנה ערך Brix גבוה. מה אפשר להסיק בביטחון?",options:{A:"שיש בו בהכרח רק הרבה סוכר",B:"שיש בו ריכוז גבוה יחסית של חומרים מומסים",C:"שאין בו סוכר בכלל",D:"שכל החומרים המומסים בו הם גלוקוז"},correct:"B",note:"הרפרקטומטר מודד את כלל החומרים המומסים, ולכן אי אפשר להסיק שכל האות הוא סוכר בלבד."}
 ];
 
 function quizQuestion(n){return BRIX_QUIZ_QUESTIONS[Math.max(0,Number(n)-1)]||null}
@@ -161,7 +161,7 @@ function teacherQuizHtml(qd){
       const q=quizQuestion(r.question), correct=Number(r[q.correct]||0), answered=Number(r.answered||0), pct=answered?Math.round(correct/answered*100):0;
       return '<div class="quiz-summary-row"><span>שאלה '+r.question+'</span><div><i style="width:'+pct+'%"></i></div><strong>'+correct+' / '+answered+' נכון</strong></div>';
     }).join("");
-    return '<section class="card teacher-quiz-card"><span class="student-kicker">בדיקת ידע · הושלמה</span><h2>תמונת מצב כיתתית</h2><div class="quiz-summary-list">'+rows+'</div><button class="btn primary" onclick="setStage(3)">פתיחת הרפלקציה</button></section>';
+    return '<section class="card teacher-quiz-card"><span class="student-kicker">בדיקת ידע · הושלמה</span><h2>תמונת מצב כיתתית</h2><div class="quiz-summary-list">'+rows+'</div><button class="btn primary" onclick="setStage(3)">פתיחת מסקנות וחקר</button></section>';
   }
   if(!item){
     return '<section class="card teacher-quiz-card"><span class="student-kicker">שלב 3 · בודקים מה הבנו</span><h2>10 שאלות · שאלה אחת בכל פעם</h2><p>כל תלמיד עונה באופן אישי. לאחר מכן חושפים את ההתפלגות והתשובה ומקיימים דיון קצר.</p><button class="btn primary" onclick="controlQuiz(1,\'answering\')">פתיחת שאלה 1</button></section>';
@@ -186,9 +186,9 @@ function projectionQuizHtml(qd){
   const item=quizQuestion(qd.question), cur=qd.current||{}, total=Number(qd.student_count||0);
   const head='<div class="section-title-row"><div><span class="student-kicker">בדיקת ידע · שאלה '+qd.question+' מתוך 10</span><h2>'+esc(item.q)+'</h2></div><strong>'+Number(cur.answered||0)+' / '+total+' ענו</strong></div>';
   if(qd.phase==="answering"){
-    return '<section class="projection-section card projection-quiz-card">'+head+'<div class="quiz-projection-wait"><strong>חושבים ועונים באופן אישי</strong><span>ההתפלגות תיחשף רק אחרי סגירת המענה, כדי לא להשפיע על התשובות.</span></div></section>';
+    return '<section id="projection-quiz" class="projection-section card projection-quiz-card">'+head+'<div class="quiz-projection-wait"><strong>חושבים ועונים באופן אישי</strong><span>ההתפלגות תיחשף רק אחרי סגירת המענה, כדי לא להשפיע על התשובות.</span></div></section>';
   }
-  return '<section class="projection-section card projection-quiz-card">'+head+quizDistributionHtml(cur,item,total,true)+'<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div></section>';
+  return '<section id="projection-quiz" class="projection-section card projection-quiz-card">'+head+quizDistributionHtml(cur,item,total,true)+'<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div></section>';
 }
 
 function groupWorkFieldsMap(state){
@@ -205,9 +205,16 @@ function groupWorkField(section,key,label,placeholder,state,kind="textarea"){
   const attr=tag==="input"?' value="'+value+'"':'';
   const inner=tag==="textarea"?value:"";
   return '<label class="group-work-field '+(locked?'locked-by-member':'')+'"><span>'+label+'</span>'+
-    '<'+tag+' id="gw_'+section+'_'+key+'" '+(locked?'disabled':'')+' placeholder="'+esc(placeholder)+'"'+attr+' onblur="saveGroupWorkField(\''+section+'\',\''+key+'\',this.value)">'+inner+'</'+tag+'>'+
+    '<'+tag+' id="gw_'+section+'_'+key+'" '+(locked?'disabled':'')+' placeholder="'+esc(placeholder)+'"'+attr+' oninput="queueGroupWorkSave(\''+section+'\',\''+key+'\',this.value)" onblur="clearTimeout(window.__groupWorkTimers[\''+section+':'+key+'\']);saveGroupWorkField(\''+section+'\',\''+key+'\',this.value)">'+inner+'</'+tag+'>'+
     (locked?'<small class="group-field-lock">נכתב על ידי '+esc(owner)+' · השדה נעול לעריכה</small>':row.recorded_by?'<small class="group-field-owner">נכתב על ידך · אפשר לעדכן</small>':'<small>השדה פנוי — כל אחד מחברי הקבוצה יכול לקחת עליו אחריות</small>')+
   '</label>';
+}
+
+window.__groupWorkTimers={};
+function queueGroupWorkSave(section,key,value,delay=650){
+  const timerKey=section+":"+key;
+  clearTimeout(window.__groupWorkTimers[timerKey]);
+  window.__groupWorkTimers[timerKey]=setTimeout(()=>saveGroupWorkField(section,key,value),delay);
 }
 
 async function saveGroupWorkField(section,key,value){
@@ -231,7 +238,7 @@ async function studentGroupWrap(renderFn){
 }
 
 function renderGroupConclusions(s,gs){
-  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+
+  shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+studentGroupIdentity(s,gs)+'</div>'+lessonProgress(3,3,true)+
     '<main class="group-work-main"><section class="card group-work-card"><span class="student-kicker">שלב מסכם · עבודה קבוצתית</span><h1>מה מצאנו?</h1><p class="group-work-lead">עוברים מהנתונים למסקנות. אפשר לחלק את הכתיבה בין חברי הקבוצה — כל שדה שנשמר נשאר שייך למי שמילא אותו ולא ניתן לדרוס אותו.</p>'+
     '<div class="group-work-grid">'+
       groupWorkField("conclusions","findings","1. התוצאות המרכזיות שלנו","מה בלט במדידות? אילו דגימות היו גבוהות או נמוכות במיוחד?",gs)+
@@ -257,9 +264,19 @@ function renderResearchPlan(s,gs){
     '</div><div class="group-work-actions"><button class="btn ghost" onclick="studentGroupWrap(renderGroupConclusions)">חזרה למסקנות</button><button class="btn primary" onclick="showGroupWorkDone()">סיום התכנון</button></div></section></main></div>');
 }
 
-function showGroupWorkDone(){
+async function showGroupWorkDone(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
+  let gs={fields:[]};
+  try{gs=await api("group_work_state",{student_id:s.student_id})}catch(e){}
+  const map=Object.fromEntries((gs.fields||[]).map(f=>[f.section+":"+f.field_key,f]));
+  const needed=["question","hypothesis","independent","dependent","controls","equipment","procedure","data_plan"];
+  const missing=needed.filter(k=>!String(map["research_plan:"+k]?.field_value||"").trim());
+  if(missing.length){
+    alert("כדי לסיים, השלימו את כל שמונת רכיבי תכנון החקר.");
+    renderResearchPlan(s,gs);
+    return;
+  }
   shell('<div class="student-lab-shell group-work-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(3,3,true)+'<main class="group-work-main"><section class="card group-work-card group-work-done"><div class="done-mark">✓</div><h1>סיימתם את העבודה הקבוצתית</h1><p>המסקנות ותכנון חקר ההמשך נשמרו לקבוצה. אפשר לחזור ולעדכן שדות שכתבתם בעצמכם.</p><div class="group-work-actions"><button class="btn ghost" onclick="studentGroupWrap(renderGroupConclusions)">צפייה במסקנות</button><button class="btn ghost" onclick="studentGroupWrap(renderResearchPlan)">צפייה בתכנון החקר</button></div></section></main></div>');
 }
 
@@ -769,14 +786,14 @@ function showTrendEquation(){
   const m=linearModel(window.__modelPoints);
   document.getElementById('calibrationGraph').innerHTML=calibrationSvg(window.__modelPoints,true,true);
   const sign=m.b<0?'−':'+';
-  document.getElementById('equationBox').innerHTML='<div class="equation-card"><span>משוואת קו הכיול</span><strong>y = '+m.a.toFixed(2)+'x '+sign+' '+Math.abs(m.b).toFixed(2)+'</strong><div class="equation-legend"><span><b>x</b> = ריכוז הסוכר</span><span><b>y</b> = °Brix</span></div><p>סיימתם לבנות את מודל הכיול של הקבוצה. בשלב הבא תשתמשו במשוואה הזו כדי לחשב את ריכוז הסוכר בדגימות לא ידועות.</p><div class="equation-next-actions"><button class="btn ghost" onclick="showEquationUse()">ראו דוגמה לחישוב</button><button class="btn primary" onclick="startSampleStage()">ממשיכים לבדיקת משקאות ←</button></div></div>';
+  document.getElementById('equationBox').innerHTML='<div class="equation-card"><span>משוואת קו הכיול</span><strong>y = '+m.a.toFixed(2)+'x '+sign+' '+Math.abs(m.b).toFixed(2)+'</strong><div class="equation-legend"><span><b>x</b> = ריכוז הסוכר</span><span><b>y</b> = °Brix</span></div><p>סיימתם לבנות את מודל הכיול של הקבוצה. בשלב הבא תשתמשו במשוואה הזו כדי לחשב את ריכוז הסוכר בדגימות לא ידועות.</p><div class="equation-next-actions"><button class="btn ghost" onclick="showEquationUse()">ראו דוגמה לחישוב</button><button class="btn primary" onclick="startSampleStage()">ממשיכים לבדיקת דגימות ←</button></div></div>';
   document.getElementById('equationBtn').disabled=true;
 }
 function showEquationUse(){
   const m=linearModel(window.__modelPoints);
   const sampleY=Math.max(1,Math.round(window.__modelPoints.reduce((a,p)=>a+p.y,0)/window.__modelPoints.length*10)/10);
   const x=m.a===0?0:(sampleY-m.b)/m.a;
-  document.getElementById('equationBox').innerHTML+='<div class="equation-use"><h3>מהמדידה אל הריכוז</h3><p>נניח שמדדנו דגימה וקיבלנו <strong>'+sampleY+'° Brix</strong>.</p><div class="solve-line"><span>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>'+sampleY+' = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>x ≈ <strong>'+x.toFixed(2)+' גרם/100 מ״ל</strong></span></div><p class="science-note">כך מודל שנבנה מנתוני הכיול מאפשר לנו לאמוד את ריכוז הסוכר בדגימה שאיננו יודעים את ריכוזה מראש.</p><button class="btn primary experiment-main-btn" onclick="startSampleStage()">הבנתי — ממשיכים לשלב 4: בדיקת משקאות</button></div>';
+  document.getElementById('equationBox').innerHTML+='<div class="equation-use"><h3>מהמדידה אל הריכוז</h3><p>נניח שמדדנו דגימה וקיבלנו <strong>'+sampleY+'° Brix</strong>.</p><div class="solve-line"><span>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>'+sampleY+' = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>x ≈ <strong>'+x.toFixed(2)+' גרם/100 מ״ל</strong></span></div><p class="science-note">כך מודל שנבנה מנתוני הכיול מאפשר לנו לאמוד את ריכוז הסוכר בדגימה שאיננו יודעים את ריכוזה מראש.</p><button class="btn primary experiment-main-btn" onclick="startSampleStage()">הבנתי — ממשיכים לשלב 4: בדיקת דגימות</button></div>';
 }
 
 async function startSampleStage(){
@@ -821,7 +838,7 @@ function renderSampleStage(s,state){
     const disabled=locked?' disabled':'';
     const checked=!!window.__manualSampleChecks[n];
     return '<article class="sample-card manual-sample-card '+(locked?'locked-by-member':'')+'"><div class="sample-title"><strong>דגימה '+n+'</strong><span class="manual-badge">'+(locked?'נשמר ע״י '+esc(owner):'חישוב עצמאי')+'</span></div>'+
-      '<label><span>שם המשקה</span><input id="sample_name_'+n+'" '+disabled+' value="'+esc(row.sample_name??draftSamples[n]?.sample_name??"")+'" placeholder="למשל: מיץ תפוזים / קולה" oninput="saveSampleDraftField('+n+',\'sample_name\',this.value)"></label>'+
+      '<label><span>שם הדגימה</span><input id="sample_name_'+n+'" '+disabled+' value="'+esc(row.sample_name??draftSamples[n]?.sample_name??"")+'" placeholder="למשל: תפוח / מיץ תפוזים / קולה" oninput="saveSampleDraftField('+n+',\'sample_name\',this.value)"></label>'+
       '<label><span>1. כתבו את y — ערך ה־Brix שמדדתם</span><div class="sample-brix-input"><input id="sample_brix_'+n+'" '+disabled+' type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(row.brix_value??draftSamples[n]?.brix_value??"")+'" placeholder="0.0" oninput="saveSampleDraftField('+n+',\'brix_value\',this.value)"><strong>°Brix</strong></div></label>'+
       '<div class="manual-equation-guide"><span>2. הציבו את y במשוואת הכיול וחשבו את x</span><code>y = ax + b</code><small>x הוא ריכוז הסוכר המשוער</small></div>'+
       '<label><span>3. מה קיבלתם עבור x?</span><div class="sample-brix-input"><input id="sample_x_'+n+'" '+disabled+' type="number" inputmode="decimal" min="0" max="100" step="0.01" value="'+esc(row.estimated_sugar??draftSamples[n]?.estimated_sugar??"")+'" placeholder="0.00" oninput="saveSampleDraftField('+n+',\'estimated_sugar\',this.value)"><strong>g/100mL</strong></div></label>'+
@@ -836,13 +853,13 @@ function renderSampleStage(s,state){
     const owner=row.recorded_by_name||'חבר/ת קבוצה';
     const disabled=(!unlocked||locked)?' disabled':'';
     return '<article class="sample-card auto-sample-card '+(unlocked?'':'sample-locked')+' '+(locked?'locked-by-member':'')+'"><div class="sample-title"><strong>דגימה '+n+'</strong><span>'+(locked?'נשמר ע״י '+esc(owner):(unlocked?'חישוב אוטומטי':'נפתח אחרי 2 חישובים נכונים'))+'</span></div>'+
-      '<label><span>שם המשקה</span><input id="sample_name_'+n+'" '+disabled+' value="'+esc(row.sample_name??draftSamples[n]?.sample_name??"")+'" placeholder="למשל: תה קר / משקה אנרגיה" oninput="saveSampleDraftField('+n+',\'sample_name\',this.value)"></label>'+
+      '<label><span>שם הדגימה</span><input id="sample_name_'+n+'" '+disabled+' value="'+esc(row.sample_name??draftSamples[n]?.sample_name??"")+'" placeholder="למשל: ענבים / תה קר / משקה אנרגיה" oninput="saveSampleDraftField('+n+',\'sample_name\',this.value)"></label>'+
       '<label><span>מדידת Brix</span><div class="sample-brix-input"><input id="sample_brix_'+n+'" '+disabled+' type="number" inputmode="decimal" min="0" max="100" step="0.1" value="'+esc(row.brix_value??draftSamples[n]?.brix_value??"")+'" placeholder="0.0" oninput="saveSampleDraftField('+n+',\'brix_value\',this.value);updateSampleEstimate('+n+')"><strong>°Brix</strong></div></label>'+
       '<div id="sample_est_'+n+'" class="sample-estimate">'+(row.estimated_sugar!=null?'<span>ריכוז סוכר משוער</span><strong>'+Number(row.estimated_sugar).toFixed(2)+' g/100mL</strong>':'<span>'+(unlocked?'החישוב יופיע כאן':'נעול')+'</span>')+'</div>'+
       (locked?'<div class="group-field-lock">הדגימה נעולה כדי שלא תידרס.</div>':'')+'</article>';
   }).join("");
 
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים משקאות לא ידועים</h1><p class="samples-lead">זהו מרחב קבוצתי משותף. כל תלמיד יכול להזין דגימות אחרות; דגימה שכבר נשמרה על ידי חבר קבוצה אחר תופיע לכולם אך תהיה נעולה לעריכה.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות שלי</button></section></main></div>');
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים דגימות לא ידועות</h1><p class="samples-lead">זהו מרחב קבוצתי משותף. כל תלמיד יכול להזין דגימות אחרות; דגימה שכבר נשמרה על ידי חבר קבוצה אחר תופיע לכולם אך תהיה נעולה לעריכה.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות שלי</button></section></main></div>');
 }
 
 function unlockAutoSamplesInPlace(){
@@ -994,7 +1011,7 @@ function sampleBarChartSvg(rows){
     const label=String(r.sample_name||('דגימה '+(i+1)));
     return '<g class="bar-item"><rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="8"/><text x="'+(x+bw/2)+'" y="'+(y-8)+'" class="bar-value">'+v.toFixed(2)+'</text><text x="'+(x+bw/2)+'" y="'+(H-B+24)+'" class="bar-label">'+esc(label)+'</text></g>';
   }).join('');
-  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="גרף עמודות של ריכוז הסוכר המשוער במשקאות">'+grid+'<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" class="axis-line"/><line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" class="axis-line"/><text x="'+(W/2)+'" y="'+(H-22)+'" class="axis-title">סוג המשקה</text><text x="18" y="'+(H/2)+'" transform="rotate(-90 18 '+(H/2)+')" class="axis-title">ריכוז סוכר משוער (גרם/100 מ״ל)</text>'+bars+'</svg>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="גרף עמודות של ריכוז הסוכר המשוער במשקאות">'+grid+'<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" class="axis-line"/><line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" class="axis-line"/><text x="'+(W/2)+'" y="'+(H-22)+'" class="axis-title">סוג הדגימה</text><text x="18" y="'+(H/2)+'" transform="rotate(-90 18 '+(H/2)+')" class="axis-title">ריכוז סוכר משוער (גרם/100 מ״ל)</text>'+bars+'</svg>';
 }
 
 function showSampleBarChart(){
@@ -1002,7 +1019,7 @@ function showSampleBarChart(){
   const rows=state.samples||[];
   const el=document.getElementById('sampleBarChartWrap');
   if(!el)return;
-  el.innerHTML='<div class="bar-chart-card"><div class="section-title-row"><div><span class="student-kicker">גרף עמודות</span><h2>משווים בין הדגימות</h2></div><p>כאן המשתנה הבלתי־תלוי הוא סוג המשקה — משתנה בדיד ולא רציף — ולכן גרף עמודות מתאים להשוואה.</p></div><div class="sample-bar-chart">'+sampleBarChartSvg(rows)+'</div></div>';
+  el.innerHTML='<div class="bar-chart-card"><div class="section-title-row"><div><span class="student-kicker">גרף עמודות</span><h2>משווים בין הדגימות</h2></div><p>כאן המשתנה הבלתי־תלוי הוא סוג הדגימה — משתנה בדיד ולא רציף — ולכן גרף עמודות מתאים להשוואה.</p></div><div class="sample-bar-chart">'+sampleBarChartSvg(rows)+'</div></div>';
   const btn=document.getElementById('buildSampleBarBtn');
   if(btn)btn.disabled=true;
 }
@@ -1021,14 +1038,14 @@ function teacherSampleGraphsHtml(data){
     ? '<div class="teacher-summary-sample-graph"><div class="section-title-row"><div><span class="student-kicker">סיכום כיתתי</span><h2>ממוצע ריכוז הסוכר בין הקבוצות</h2></div><p>הגרף מוצג רק לדגימות שבהן כל הקבוצות הזינו אותו שם משקה באותו מספר דגימה.</p></div><div class="sample-bar-chart">'+sampleBarChartSvg(agg.map(x=>({sample_name:x.sample_name,estimated_sugar:x.average_estimated_sugar})))+'</div></div>'
     : '<div class="sample-compare-note"><strong>עדיין אין גרף כיתתי מסכם.</strong><span>כדי לחשב ממוצע אמין, כל הקבוצות צריכות להזין את אותו משקה באותו מספר דגימה ובאותו שם.</span></div>';
 
-  return '<section class="card teacher-sample-section"><div class="section-title-row"><div><span class="student-kicker">בדיקת משקאות</span><h2>גרפי העמודות של הקבוצות</h2></div><p>כל גרף מבוסס על נתוני אותה קבוצה בלבד.</p></div><div class="teacher-group-sample-grid">'+groupGraphs+'</div>'+aggregateGraph+'</section>';
+  return '<section class="card teacher-sample-section"><div class="section-title-row"><div><span class="student-kicker">בדיקת דגימות</span><h2>גרפי העמודות של הקבוצות</h2></div><p>כל גרף מבוסס על נתוני אותה קבוצה בלבד.</p></div><div class="teacher-group-sample-grid">'+groupGraphs+'</div>'+aggregateGraph+'</section>';
 }
 
 function renderSampleSummary(s,state){
   const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
   const rows=(state?.samples||[]);
   window.__brixSampleState=state;
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(5)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין המשקאות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג המשקה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+studentExperimentProgress(5)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין המשקאות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג הדגימה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
 }
 
 function calibrationSvg(pts,trend,equation){
@@ -1248,13 +1265,30 @@ function toggleTeacherEquation(){
 function projectionSampleSummaryHtml(data){
   const agg=(data.sample_aggregate||[]).filter(x=>x.comparable);
   if(!agg.length){
-    return '<section id="projection-samples" class="projection-section card"><span class="student-kicker">שלב 3 · בדיקת משקאות</span><h2>תוצאות כיתתיות</h2><div class="graph-waiting"><strong>עדיין אין נתונים משותפים להצגה</strong><span>גרף כיתתי יוצג רק כאשר הקבוצות מדדו את אותן דגימות באופן שניתן להשוואה.</span></div></section>';
+    return '<section id="projection-samples" class="projection-section card"><span class="student-kicker">שלב 3 · בדיקת דגימות</span><h2>תוצאות כיתתיות</h2><div class="graph-waiting"><strong>עדיין אין נתונים משותפים להצגה</strong><span>גרף כיתתי יוצג רק כאשר הקבוצות מדדו את אותן דגימות באופן שניתן להשוואה.</span></div></section>';
   }
   const rows=agg.map(x=>({sample_name:x.sample_name,estimated_sugar:x.average_estimated_sugar}));
-  return '<section id="projection-samples" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 3 · בדיקת משקאות</span><h2>השוואת המשקאות — ממוצע כיתתי</h2></div><p>מוצגים רק נתונים מצרפיים של הכיתה, ללא שמות קבוצות או תלמידים.</p></div><div class="sample-bar-chart projection-bar-chart">'+sampleBarChartSvg(rows)+'</div></section>';
+  return '<section id="projection-samples" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 3 · בדיקת דגימות</span><h2>השוואת הדגימות — ממוצע כיתתי</h2></div><p>מוצגים רק נתונים מצרפיים של הכיתה, ללא שמות קבוצות או תלמידים.</p></div><div class="sample-bar-chart projection-bar-chart">'+sampleBarChartSvg(rows)+'</div></section>';
 }
 
-function teacherProjectionHtml(data,quizData=null){
+function projectionGroupWorkHtml(gwd){
+  if(!gwd)return "";
+  const groups=gwd.groups||[];
+  if(!groups.length)return "";
+  const cKeys=["findings","comparison","limitations","recommendation"];
+  const rKeys=["question","hypothesis","independent","dependent","controls","equipment","procedure","data_plan"];
+  const counts=groups.map(g=>{
+    const map=Object.fromEntries((g.fields||[]).map(f=>[f.section+":"+f.field_key,f]));
+    const cDone=cKeys.filter(k=>String(map["conclusions:"+k]?.field_value||"").trim()).length;
+    const rDone=rKeys.filter(k=>String(map["research_plan:"+k]?.field_value||"").trim()).length;
+    return {name:g.group_name,cDone,rDone};
+  });
+  const conclusionsDone=counts.filter(x=>x.cDone===4).length;
+  const researchDone=counts.filter(x=>x.rDone===8).length;
+  return '<section id="projection-group-work" class="projection-section card projection-group-work-card"><div class="section-title-row"><div><span class="student-kicker">שלב 4 · מסקנות וחקר</span><h2>הכיתה מסכמת ומתכננת חקר המשך</h2></div></div><div class="projection-group-progress"><div><span>קבוצות שסיימו מסקנות</span><strong>'+conclusionsDone+' / '+groups.length+'</strong></div><div><span>קבוצות שסיימו תכנון חקר</span><strong>'+researchDone+' / '+groups.length+'</strong></div></div><div class="projection-group-list">'+counts.map(x=>'<div><strong>'+esc(x.name)+'</strong><span>מסקנות '+x.cDone+'/4 · חקר '+x.rDone+'/8</span></div>').join("")+'</div></section>';
+}
+
+function teacherProjectionHtml(data,quizData=null,groupWorkData=null){
   const s=data.session;
   const pts=teacherCalibrationPoints(data);
   const graph=pts.length>=2
@@ -1270,18 +1304,19 @@ function teacherProjectionHtml(data,quizData=null){
 
   return '<div class="projection-shell">'+
     '<header class="projection-header"><button class="btn ghost projection-exit" onclick="toggleProjection()">יציאה מהקרנה</button>'+brand()+'<div class="projection-class">'+esc(s.class_name||'')+'</div></header>'+
-    '<nav class="projection-nav"><button onclick="document.getElementById(\'projection-opening\').scrollIntoView({behavior:\'smooth\'})">1 · פתיחה</button><button onclick="document.getElementById(\'projection-calibration\').scrollIntoView({behavior:\'smooth\'})">2 · כיול</button><button onclick="document.getElementById(\'projection-samples\').scrollIntoView({behavior:\'smooth\'})">3 · משקאות</button></nav>'+
+    '<nav class="projection-nav '+((quizData||groupWorkData)?'projection-nav-four':'')+'"><button onclick="document.getElementById(\'projection-opening\').scrollIntoView({behavior:\'smooth\'})">1 · פתיחה</button><button onclick="document.getElementById(\'projection-calibration\').scrollIntoView({behavior:\'smooth\'})">2 · כיול</button><button onclick="document.getElementById(\'projection-samples\').scrollIntoView({behavior:\'smooth\'})">3 · דגימות</button>'+((quizData&&quizData.question)?'<button onclick="document.getElementById(\'projection-quiz\')?.scrollIntoView({behavior:\'smooth\'})">4 · בדיקת ידע</button>':groupWorkData?'<button onclick="document.getElementById(\'projection-group-work\')?.scrollIntoView({behavior:\'smooth\'})">4 · מסקנות וחקר</button>':'')+'</nav>'+
     '<main class="projection-main">'+
       '<section id="projection-opening" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>מה חשבה הכיתה?</h2></div><strong class="projection-count">'+Number(survey.submitted_count||0)+' ענו</strong></div><div class="teacher-survey projection-survey"><div><span>פעם ביום</span><b>'+Number(surveyData.daily||0)+'</b></div><div><span>פעם בשבוע</span><b>'+Number(surveyData.weekly||0)+'</b></div><div><span>רק באירועים</span><b>'+Number(surveyData.events||0)+'</b></div><div><span>לא שותה ממותק</span><b>'+Number(surveyData.never||0)+'</b></div></div><div class="guess-averages projection-guesses"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+esc(guesses.cola??'—')+'</b></span><span>תפוזים <b>'+esc(guesses.orange??'—')+'</b></span><span>תה קר <b>'+esc(guesses.iced_tea??'—')+'</b></span><span>אנרגיה <b>'+esc(guesses.energy??'—')+'</b></span></div></div></section>'+
       '<section id="projection-calibration" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 2 · כיול</span><h2>גרף הכיול הכיתתי</h2></div><p>הגרף מבוסס על ממוצעי הכיתה בלבד.</p></div>'+calibrationBlock+'</section>'+
       projectionSampleSummaryHtml(data)+
       projectionQuizHtml(quizData)+
+      projectionGroupWorkHtml(groupWorkData)+
     '</main>'+
   '</div>';
 }
 
-function renderTeacherProjection(data,quizData=null){
-  shell(teacherProjectionHtml(data,quizData),"teacher-projection-shell");
+function renderTeacherProjection(data,quizData=null,groupWorkData=null){
+  shell(teacherProjectionHtml(data,quizData,groupWorkData),"teacher-projection-shell");
 }
 
 async function dashboard(){
@@ -1301,7 +1336,7 @@ async function dashboard(){
  }
  const projecting=document.body.classList.contains("projection-mode");
  if(projecting){
-   renderTeacherProjection(data,quizData);
+   renderTeacherProjection(data,quizData,groupWorkData);
    clearTimeout(window.__brixTimer);
    window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")&&document.body.classList.contains("projection-mode")) dashboard();},5000);
    return;
@@ -1329,7 +1364,7 @@ async function dashboard(){
    const openingDone=p.students>0 && p.opening===p.students;
    const zeroDone=p.step>=2;
    const calDone=p.cal===6 || p.step>=3;
-   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span><div class="group-student-names">'+((g.students||[]).length?(g.students||[]).map(esc).join(' · '):'טרם הצטרפו תלמידים')+'</div></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'done':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'✓':'—')+'</b></div><div class="'+(p.samples>0?'doing':'pending')+'"><span>משקאות</span><b>'+(p.samples>0?p.samples+' דגימות':'—')+'</b></div></div></article>';
+   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span><div class="group-student-names">'+((g.students||[]).length?(g.students||[]).map(esc).join(' · '):'טרם הצטרפו תלמידים')+'</div></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'done':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'✓':'—')+'</b></div><div class="'+(p.samples>0?'doing':'pending')+'"><span>דגימות</span><b>'+(p.samples>0?p.samples+' דגימות':'—')+'</b></div></div></article>';
  }).join("");
 
  shell(
