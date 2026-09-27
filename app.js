@@ -412,7 +412,7 @@ async function dashboard(){
  const calibrationRows=(data.calibration_summary||[]).map(r=>{
    const avg=r.average_brix==null?'—':Number(r.average_brix).toFixed(2);
    const range=r.min_brix==null?'—':(Number(r.min_brix)===Number(r.max_brix)?Number(r.min_brix).toFixed(1):Number(r.min_brix).toFixed(1)+'–'+Number(r.max_brix).toFixed(1));
-   return '<tr><td><strong>תמיסה '+r.solution_number+'</strong></td><td>'+r.reported_groups+' / '+s.group_count+'</td><td class="avg-cell">'+avg+'</td><td>'+range+'</td></tr>';
+   return '<tr><td data-label="תמיסה"><strong>תמיסה '+r.solution_number+'</strong></td><td data-label="קבוצות שדיווחו">'+r.reported_groups+' / '+s.group_count+'</td><td data-label="ממוצע Brix" class="avg-cell">'+avg+'</td><td data-label="טווח">'+range+'</td></tr>';
  }).join("");
 
  const groupCards=(data.groups||[]).map(g=>{
