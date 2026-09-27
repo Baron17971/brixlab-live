@@ -446,10 +446,63 @@ async function saveSamples(){
   }
 }
 
+
+function sampleBarChartSvg(rows){
+  const data=(rows||[]).filter(r=>r.estimated_sugar!=null);
+  const W=700,H=390,L=70,R=24,T=28,B=92;
+  const maxY=Math.max(...data.map(r=>Number(r.estimated_sugar)||0),1)*1.15;
+  const plotW=W-L-R, plotH=H-T-B;
+  const step=plotW/Math.max(data.length,1);
+  let grid='';
+  for(let i=0;i<=5;i++){
+    const y=T+i*plotH/5;
+    const val=maxY*(1-i/5);
+    grid+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" class="gridline"/><text x="'+(L-10)+'" y="'+(y+4)+'" class="tick-label">'+val.toFixed(1)+'</text>';
+  }
+  const bars=data.map((r,i)=>{
+    const v=Number(r.estimated_sugar)||0;
+    const bw=Math.min(62,step*.56);
+    const x=L+i*step+(step-bw)/2;
+    const h=(v/maxY)*plotH;
+    const y=T+plotH-h;
+    const label=String(r.sample_name||('דגימה '+(i+1)));
+    return '<g class="bar-item"><rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="8"/><text x="'+(x+bw/2)+'" y="'+(y-8)+'" class="bar-value">'+v.toFixed(2)+'</text><text x="'+(x+bw/2)+'" y="'+(H-B+24)+'" class="bar-label">'+esc(label)+'</text></g>';
+  }).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="גרף עמודות של ריכוז הסוכר המשוער במשקאות">'+grid+'<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" class="axis-line"/><line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" class="axis-line"/><text x="'+(W/2)+'" y="'+(H-22)+'" class="axis-title">סוג המשקה</text><text x="18" y="'+(H/2)+'" transform="rotate(-90 18 '+(H/2)+')" class="axis-title">ריכוז סוכר משוער (גרם/100 מ״ל)</text>'+bars+'</svg>';
+}
+
+function showSampleBarChart(){
+  const state=window.__brixSampleState||{};
+  const rows=state.samples||[];
+  const el=document.getElementById('sampleBarChartWrap');
+  if(!el)return;
+  el.innerHTML='<div class="bar-chart-card"><div class="section-title-row"><div><span class="student-kicker">גרף עמודות</span><h2>משווים בין הדגימות</h2></div><p>כאן המשתנה הבלתי־תלוי הוא סוג המשקה — משתנה בדיד ולא רציף — ולכן גרף עמודות מתאים להשוואה.</p></div><div class="sample-bar-chart">'+sampleBarChartSvg(rows)+'</div></div>';
+  const btn=document.getElementById('buildSampleBarBtn');
+  if(btn)btn.disabled=true;
+}
+
+function teacherSampleGraphsHtml(data){
+  const groups=(data.groups||[]).filter(g=>(g.samples||[]).length);
+  if(!groups.length)return '';
+
+  const groupGraphs=groups.map(g=>
+    '<article class="teacher-group-sample-graph"><div class="group-sample-head"><h3>'+esc(g.group_name)+'</h3><span>'+(g.samples||[]).length+' דגימות</span></div><div class="sample-bar-chart">'+sampleBarChartSvg(g.samples||[])+'</div></article>'
+  ).join('');
+
+  const agg=(data.sample_aggregate||[]).filter(x=>x.comparable);
+  const allGroupsComparable=agg.length>0 && agg.every(x=>Number(x.groups_reporting)===Number(data.session.group_count));
+  const aggregateGraph=allGroupsComparable
+    ? '<div class="teacher-summary-sample-graph"><div class="section-title-row"><div><span class="student-kicker">סיכום כיתתי</span><h2>ממוצע ריכוז הסוכר בין הקבוצות</h2></div><p>הגרף מוצג רק לדגימות שבהן כל הקבוצות הזינו אותו שם משקה באותו מספר דגימה.</p></div><div class="sample-bar-chart">'+sampleBarChartSvg(agg.map(x=>({sample_name:x.sample_name,estimated_sugar:x.average_estimated_sugar})))+'</div></div>'
+    : '<div class="sample-compare-note"><strong>עדיין אין גרף כיתתי מסכם.</strong><span>כדי לחשב ממוצע אמין, כל הקבוצות צריכות להזין את אותו משקה באותו מספר דגימה ובאותו שם.</span></div>';
+
+  return '<section class="card teacher-sample-section"><div class="section-title-row"><div><span class="student-kicker">בדיקת משקאות</span><h2>גרפי העמודות של הקבוצות</h2></div><p>כל גרף מבוסס על נתוני אותה קבוצה בלבד.</p></div><div class="teacher-group-sample-grid">'+groupGraphs+'</div>'+aggregateGraph+'</section>';
+}
+
 function renderSampleSummary(s,state){
   const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
   const rows=(state?.samples||[]);
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו אפשר להשוות בין המשקאות ולחשוב מה משמעות ההבדלים בריכוז הסוכר המשוער.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
+  window.__brixSampleState=state;
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(stage,1,true)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין המשקאות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג המשקה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
 }
 
 function calibrationSvg(pts,trend,equation){
@@ -712,6 +765,7 @@ async function dashboard(){
      '<div class="card dashboard-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
      '<section class="card class-calibration-card"><div class="section-title-row"><div><span class="student-kicker">לפני בניית הגרף</span><h2>ממוצעי הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה. כל שורה הופכת לנקודה בגרף הכיתתי.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+
      '<section class="card groups-progress-card"><div class="section-title-row"><div><span class="student-kicker">ביצוע בפועל</span><h2>התקדמות הקבוצות</h2></div><p>כאן רואים מה כל קבוצה כבר ביצעה — לא מי מחובר.</p></div><div class="groups-progress-grid">'+groupCards+'</div></section>'+
+     teacherSampleGraphsHtml(data)+
      '<section class="card opening-live-card compact-opening-results"><div class="opening-live-head"><div><span class="student-kicker">פתיחה כיתתית</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
    '</main>'+
  '</div>',
