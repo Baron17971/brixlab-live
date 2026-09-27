@@ -3884,3 +3884,47 @@ button{cursor:pointer}
     font-size:23px;
   }
 }
+
+/* Group identity and member names */
+.student-group-identity{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:2px;
+  padding:7px 11px;
+  border-radius:14px;
+  background:rgba(255,255,255,.84);
+  border:1px solid rgba(23,57,95,.10);
+}
+.student-group-identity strong{
+  color:var(--navy);
+  font-size:13px;
+}
+.student-group-identity span{
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.35;
+  text-align:right;
+}
+.group-student-names{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.45;
+  max-width:420px;
+}
+
+@media(max-width:850px){
+  .student-group-identity{
+    max-width:62vw;
+    padding:6px 9px;
+  }
+  .student-group-identity span{
+    font-size:10px;
+    white-space:normal;
+  }
+  .group-student-names{
+    font-size:10px;
+    max-width:none;
+  }
+}
