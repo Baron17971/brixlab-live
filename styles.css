@@ -590,3 +590,25 @@ button{cursor:pointer}
     object-position:center;
   }
 }
+
+/* Keep only image-based screens fixed; allow dashboard/lesson pages to scroll */
+@media(max-width:850px){
+  html,body,#app{
+    min-height:100%;
+    height:auto;
+    overflow:auto;
+  }
+  .image-shell,.image-screen{
+    height:100dvh;
+    min-height:100dvh;
+    overflow:hidden;
+  }
+  .shell:not(.image-shell){
+    min-height:100dvh;
+    height:auto;
+    overflow:visible;
+  }
+  .dashboard{
+    min-height:auto;
+  }
+}
