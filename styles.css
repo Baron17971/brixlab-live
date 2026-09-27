@@ -4016,3 +4016,38 @@ button{cursor:pointer}
  .quiz-summary-row{grid-template-columns:62px 1fr;gap:7px}
  .quiz-summary-row>strong{grid-column:1/-1;text-align:left;font-size:11px}
 }
+
+/* Group conclusions and follow-up research planning */
+.group-work-main{max-width:980px;margin:22px auto;padding:0 16px 32px}
+.group-work-card{padding:28px}
+.group-work-card h1{margin:6px 0 8px;color:var(--navy);font-size:clamp(28px,4vw,42px)}
+.group-work-lead{max-width:780px;color:var(--muted);line-height:1.6}
+.group-work-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+.group-work-field{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid #dce7e8;border-radius:18px;background:rgba(255,255,255,.86)}
+.group-work-field>span{font-weight:900;color:var(--navy)}
+.group-work-field textarea,.group-work-field input{width:100%;box-sizing:border-box;border:1px solid #cfdcde;border-radius:14px;background:#fff;padding:12px 13px;font:inherit;color:var(--navy);outline:none}
+.group-work-field textarea{min-height:116px;resize:vertical;line-height:1.5}
+.group-work-field textarea:focus,.group-work-field input:focus{border-color:#72beb7;box-shadow:0 0 0 3px rgba(114,190,183,.12)}
+.group-work-field>small:not(.group-field-lock):not(.group-field-owner){color:var(--muted);font-size:11px}
+.group-work-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:24px}
+.research-idea-strip{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px;padding:12px 14px;border-radius:14px;background:#f4f8f7;color:var(--muted)}
+.research-idea-strip strong{color:var(--navy)}
+.group-work-done{text-align:center;max-width:680px;margin:auto}
+.teacher-group-work-section{margin-top:16px}
+.teacher-group-work-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.group-work-teacher-card{padding:16px;border:1px solid #dce7e8;border-radius:18px;background:#fff}
+.group-work-status{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.group-work-status span{padding:6px 9px;border-radius:999px;font-size:11px;font-weight:900}
+.group-work-status .done{background:#e8f7ef;color:#38775d}
+.group-work-status .pending{background:#f3f5f6;color:#67757d}
+.group-work-teacher-card details{border-top:1px solid #edf1f2;padding:9px 0}
+.group-work-teacher-card summary{cursor:pointer;color:var(--navy);font-weight:800}
+.group-work-teacher-card summary small{margin-inline-start:6px;color:var(--muted);font-weight:600}
+.group-work-teacher-card details p{margin:8px 0 0;color:#53616a;line-height:1.5;white-space:pre-wrap}
+
+@media(max-width:760px){
+ .group-work-main{padding:0 10px 24px}
+ .group-work-card{padding:20px 14px}
+ .group-work-grid,.teacher-group-work-grid{grid-template-columns:1fr}
+ .group-work-field textarea{min-height:104px}
+}
