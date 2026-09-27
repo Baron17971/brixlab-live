@@ -142,6 +142,23 @@ async function createSession(){
   localStorage.setItem("brix_teacher",JSON.stringify(data)); go("dashboard");
  }catch(e){msg.innerHTML='<div class="error">לא הצלחתי לפתוח שיעור. נסו שוב.</div>'}
 }
+async function toggleProjection(){
+  const on=!document.body.classList.contains("projection-mode");
+  document.body.classList.toggle("projection-mode",on);
+  try{
+    if(on && !document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+    if(!on && document.fullscreenElement) await document.exitFullscreen?.();
+  }catch(e){}
+  if(location.hash.startsWith("#dashboard")) dashboard();
+}
+
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement && document.body.classList.contains("projection-mode")){
+    document.body.classList.remove("projection-mode");
+    if(location.hash.startsWith("#dashboard")) dashboard();
+  }
+});
+
 async function dashboard(){
  const t=JSON.parse(localStorage.getItem("brix_teacher")||"null");
  if(!t){go("new-session");return}
@@ -151,7 +168,8 @@ async function dashboard(){
  const s=data.session;
  const joinUrl=location.origin+location.pathname+'#student?code='+encodeURIComponent(s.class_code);
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
- shell('<div class="topbar"><div>'+brand()+'</div><button class="btn ghost" onclick="localStorage.removeItem(\'brix_teacher\');go(\'home\')">יציאה</button></div><div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card"><h3>שלבי השיעור</h3><div class="stage-row">'+["פתיחה","רפרקטומטר","כיול","חקר","השוואה","תכן","סיכום","רפלקציה"].map((x,i)=>'<div class="stage '+(i===s.current_stage?'active':'')+'">'+(i+1)+'. '+x+'</div>').join("")+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · '+esc(s.teacher_name||"מורה")+'</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div><div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>');
+ const projecting=document.body.classList.contains("projection-mode");
+ shell('<div class="topbar"><button class="btn ghost top-exit" onclick="localStorage.removeItem(\'brix_teacher\');document.body.classList.remove(\'projection-mode\');go(\'home\')">יציאה</button><div class="top-brand">'+brand()+'</div><button class="btn projection-btn" onclick="toggleProjection()">'+(projecting?'יציאה מהקרנה':'מצב הקרנה')+'</button></div><div class="dashboard"><aside class="side"><div class="card qr-card"><h3>כניסת תלמידים</h3><img src="'+qr+'" width="180" height="180" alt="QR לכניסת תלמידים"><div class="code">'+s.class_code+'</div><p>סריקה או הזנת קוד כיתה</p></div><div class="card"><h3>שלבי השיעור</h3><div class="stage-row">'+["פתיחה","רפרקטומטר","כיול","חקר","השוואה","תכן","סיכום","רפלקציה"].map((x,i)=>'<div class="stage '+(i===s.current_stage?'active':'')+'">'+(i+1)+'. '+x+'</div>').join("")+'</div></div></aside><section class="mainpanel"><div class="card"><h2>'+esc(s.class_name)+' · '+esc(s.teacher_name||"מורה")+'</h2><div class="statgrid"><div class="stat"><div class="n">'+data.student_count+'</div><div>תלמידים מחוברים</div></div><div class="stat"><div class="n">'+s.group_count+'</div><div>קבוצות</div></div><div class="stat"><div class="n">'+(s.student_entry_open?'פתוחה':'סגורה')+'</div><div>כניסת תלמידים</div></div></div></div><div class="card"><h2>התקדמות קבוצות</h2><div class="groups">'+data.groups.map(g=>'<article class="group"><span class="badge">'+g.student_count+' תלמידים</span><h3>'+esc(g.group_name)+'</h3><div class="students">'+(g.students.length?g.students.map(st=>'<span class="student">'+esc(st.first_name)+'</span>').join(""):'<span class="student">ממתינה לתלמידים</span>')+'</div></article>').join("")+'</div></div></section></div>');
  clearTimeout(window.__brixTimer);
  window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")) dashboard();},5000);
 }
