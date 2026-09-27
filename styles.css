@@ -1075,3 +1075,45 @@ button{cursor:pointer}
     -webkit-backdrop-filter:blur(10px);
   }
 }
+
+/* Teacher opening dashboard uses the dedicated desktop background */
+.teacher-opening-shell{
+  min-height:100dvh;
+  background:
+    linear-gradient(180deg,rgba(238,247,248,.20),rgba(255,249,239,.24)),
+    url("/public/screens/bg-desktop.png") center center / cover fixed no-repeat !important;
+}
+.teacher-opening-shell .topbar{
+  background:rgba(255,255,255,.74);
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:24px;
+  padding:10px 14px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 14px 40px rgba(16,55,70,.10);
+}
+.teacher-opening-shell .card{
+  background:rgba(255,255,255,.84);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.teacher-opening-shell .opening-live-card{
+  background:rgba(255,255,255,.90);
+}
+.teacher-opening-shell .teacher-survey>div,
+.teacher-opening-shell .guess-averages,
+.teacher-opening-shell .guess-averages span{
+  background:rgba(255,255,255,.90);
+}
+.projection-mode .teacher-opening-shell{
+  background:
+    linear-gradient(180deg,rgba(238,247,248,.12),rgba(255,249,239,.16)),
+    url("/public/screens/bg-desktop.png") center center / cover fixed no-repeat !important;
+}
+@media(max-width:850px){
+  .teacher-opening-shell{
+    background:
+      linear-gradient(180deg,rgba(238,247,248,.12),rgba(255,249,239,.18)),
+      url("/public/screens/bg-mobile.png") center top / cover fixed no-repeat !important;
+  }
+}
