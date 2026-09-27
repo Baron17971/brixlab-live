@@ -510,6 +510,58 @@ function teacherGroupProgress(g){
   return {students,opening,step,cal,status};
 }
 
+
+window.__teacherTrendVisible=false;
+window.__teacherEquationVisible=false;
+
+function teacherCalibrationPoints(data){
+  return (data?.calibration_summary||[])
+    .filter(r=>r.average_concentration!=null && r.average_brix!=null)
+    .map(r=>({
+      x:Number(r.average_concentration),
+      y:Number(r.average_brix),
+      n:Number(r.solution_number),
+      groups:Number(r.reported_groups||0)
+    }))
+    .sort((a,b)=>a.x-b.x);
+}
+
+function teacherCalibrationGraphHtml(data){
+  const pts=teacherCalibrationPoints(data);
+  window.__teacherCalibrationPoints=pts;
+  if(pts.length<2){
+    return '<section class="card teacher-graph-card"><div class="section-title-row"><div><span class="student-kicker">הגרף הכיתתי</span><h2>גרף הכיול נבנה בזמן אמת</h2></div><p>ככל שהקבוצות שומרות מדידות, ממוצעי הכיתה הופכים לנקודות על הגרף.</p></div><div class="graph-waiting"><strong>עדיין אין מספיק נקודות</strong><span>נדרשות לפחות שתי תמיסות עם נתונים כדי להתחיל לראות את הקשר.</span></div></section>';
+  }
+
+  const graph=calibrationSvg(pts,window.__teacherTrendVisible,window.__teacherEquationVisible);
+  const m=linearModel(pts);
+  const eq=window.__teacherEquationVisible
+    ? '<div class="teacher-equation-reveal"><span>משוואת קו הכיול</span><strong>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+')+' '+Math.abs(m.b).toFixed(2)+'</strong><p><b>x</b> = ריכוז הסוכר · <b>y</b> = ריכוז המומסים ב־°Brix</p><p class="equation-teach-note">בשלב הבא, כשנמדוד מיצים ומשקאות, נציב את ערך ה־Brix במקום y ונחשב את x — ריכוז הסוכר המשוער.</p></div>'
+    : '';
+
+  return '<section class="card teacher-graph-card">'+
+    '<div class="section-title-row"><div><span class="student-kicker">הגרף הכיתתי</span><h2>מממוצעי הכיתה לגרף כיול</h2></div><p>הנקודות מתעדכנות אוטומטית לפי ממוצעי המדידות של הקבוצות. קו המגמה והמשוואה נחשפים רק כשהמורה בוחרת.</p></div>'+
+    '<div class="teacher-live-points">'+pts.map(p=>'<span>תמיסה '+p.n+' · <b>'+p.x.toFixed(2)+'</b> g/100mL → <b>'+p.y.toFixed(2)+'</b> °Brix</span>').join('')+'</div>'+
+    '<div class="calibration-graph teacher-calibration-graph">'+graph+'</div>'+
+    '<div class="teacher-graph-actions">'+
+      '<button class="btn '+(window.__teacherTrendVisible?'ghost':'primary')+'" onclick="toggleTeacherTrend()">'+(window.__teacherTrendVisible?'הסתרת קו מגמה':'הוספת קו מגמה')+'</button>'+
+      '<button class="btn '+(window.__teacherEquationVisible?'ghost':'primary')+'" onclick="toggleTeacherEquation()" '+(!window.__teacherTrendVisible?'disabled':'')+'>'+(window.__teacherEquationVisible?'הסתרת המשוואה':'הצגת משוואת הישר')+'</button>'+
+    '</div>'+eq+
+  '</section>';
+}
+
+function toggleTeacherTrend(){
+  window.__teacherTrendVisible=!window.__teacherTrendVisible;
+  if(!window.__teacherTrendVisible) window.__teacherEquationVisible=false;
+  dashboard();
+}
+
+function toggleTeacherEquation(){
+  if(!window.__teacherTrendVisible)return;
+  window.__teacherEquationVisible=!window.__teacherEquationVisible;
+  dashboard();
+}
+
 async function dashboard(){
  const t=JSON.parse(localStorage.getItem("brix_teacher")||"null");
  if(!t){go("new-session");return}
@@ -541,7 +593,7 @@ async function dashboard(){
    const openingDone=p.students>0 && p.opening===p.students;
    const zeroDone=p.step>=2;
    const calDone=p.cal===6 || p.step>=3;
-   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="pending"><span>גרף כיול</span><b>—</b></div></div></article>';
+   return '<article class="progress-group-card"><div class="group-progress-head"><div><h3>'+esc(g.group_name)+'</h3><span>'+esc(p.status)+'</span></div><strong>'+p.students+' תלמידים</strong></div><div class="group-task-grid"><div class="'+(openingDone?'done':'pending')+'"><span>פתיחה</span><b>'+p.opening+'/'+p.students+'</b></div><div class="'+(zeroDone?'done':p.step===1?'doing':'pending')+'"><span>בדיקת אפס</span><b>'+(zeroDone?'✓':p.step===1?'כעת':'—')+'</b></div><div class="'+(calDone?'done':p.step===2?'doing':'pending')+'"><span>מדידות כיול</span><b>'+p.cal+'/6</b></div><div class="'+(calDone?'doing':'pending')+'"><span>גרף כיתתי</span><b>'+(calDone?'ממתין לכיתה':'—')+'</b></div></div></article>';
  }).join("");
 
  shell(
@@ -554,7 +606,7 @@ async function dashboard(){
    '</aside>'+
    '<main class="teacher-main">'+
      '<div class="card dashboard-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
-     '<section class="card class-calibration-card"><div class="section-title-row"><div><span class="student-kicker">לפני בניית הגרף</span><h2>ממוצעי הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה. הגרף הכיתתי ייבנה מהממוצעים.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+
+     '<section class="card class-calibration-card"><div class="section-title-row"><div><span class="student-kicker">לפני בניית הגרף</span><h2>ממוצעי הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה. כל שורה הופכת לנקודה בגרף הכיתתי.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+
      '<section class="card groups-progress-card"><div class="section-title-row"><div><span class="student-kicker">ביצוע בפועל</span><h2>התקדמות הקבוצות</h2></div><p>כאן רואים מה כל קבוצה כבר ביצעה — לא מי מחובר.</p></div><div class="groups-progress-grid">'+groupCards+'</div></section>'+
      '<section class="card opening-live-card compact-opening-results"><div class="opening-live-head"><div><span class="student-kicker">פתיחה כיתתית</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
    '</main>'+
