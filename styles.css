@@ -272,3 +272,59 @@ button{cursor:pointer}
 @media(max-width:850px){
   .new-session-card,.waiting-card{margin-top:32vh}
 }
+
+/* Compact form cards */
+.auth-card{
+  width:min(430px,84vw);
+  padding:24px 24px 20px;
+  border-radius:26px;
+}
+.auth-card h1{
+  font-size:clamp(27px,2.4vw,36px);
+  margin-bottom:18px;
+}
+.auth-field{margin:10px 0}
+.auth-field span{margin-bottom:5px;font-size:13px}
+.auth-field input,.auth-field select{
+  height:50px;
+  border-radius:16px;
+  font-size:16px;
+}
+.auth-primary{
+  min-height:52px;
+  margin-top:14px;
+  border-radius:17px;
+  font-size:18px;
+}
+.auth-secondary{
+  min-height:50px;
+  margin-top:9px;
+  border-radius:17px;
+  font-size:17px;
+}
+.auth-link{margin-top:13px;font-size:15px}
+.auth-subtitle{margin:-9px 0 14px;font-size:15px}
+.room-meta{font-size:16px;margin:-6px 0 15px}
+.room-note{padding:14px 16px;border-radius:16px;font-size:16px}
+
+@media(max-width:850px){
+  .auth-wrap{
+    align-items:flex-start;
+    padding:0 14px;
+  }
+  .auth-card{
+    width:min(430px,82vw);
+    margin-top:38vh;
+    padding:20px 18px 17px;
+    border-radius:24px;
+  }
+  .teacher-auth-card{margin-top:36vh}
+  .teacher-menu-card{margin-top:39vh}
+  .new-session-card{margin-top:31vh}
+  .waiting-card{margin-top:39vh}
+  .auth-card h1{font-size:28px;margin-bottom:14px}
+  .auth-field{margin:8px 0}
+  .auth-field input,.auth-field select{height:48px;font-size:16px}
+  .auth-primary{min-height:50px;font-size:17px}
+  .auth-secondary{min-height:48px;font-size:16px}
+}
