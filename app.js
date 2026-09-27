@@ -56,8 +56,48 @@ function teacherLogin(){
     "teacher-login-screen clean-login-screen",
     "/public/screens/brixlab-desktop.png",
     "/public/screens/brixlab-mobile.png",
-    '<div class="auth-wrap"><div class="auth-card"><h1>כניסת מורה</h1><label class="auth-field"><span>סיסמת מורה</span><input id="teacherPassword" type="password" placeholder="הקלידו סיסמה"></label><button class="auth-primary" onclick="go(\'new-session\')">פתיחת שיעור חדש <span>‹</span></button><button class="auth-secondary" onclick="go(\'new-session\')">כניסה לשיעור קיים</button><button class="auth-link" onclick="go(\'home\')">חזרה למסך הבית</button></div></div>'
+    '<div class="auth-wrap"><div class="auth-card teacher-auth-card"><h1>כניסת מורה</h1><div id="teacherMsg"></div><label class="auth-field"><span>סיסמת מורה</span><input id="teacherPassword" type="password" placeholder="הקלידו סיסמה" autocomplete="current-password"></label><button class="auth-primary" onclick="teacherEnter()">כניסה <span>‹</span></button><button class="auth-link" onclick="go(\'home\')">חזרה למסך הבית</button></div></div>'
   );
+}
+
+function teacherEnter(){
+  const input=document.getElementById("teacherPassword");
+  const msg=document.getElementById("teacherMsg");
+  const password=(input?.value||"").trim();
+  if(!password){
+    msg.innerHTML='<div class="inline-error">יש להזין סיסמת מורה.</div>';
+    input?.focus();
+    return;
+  }
+  sessionStorage.setItem("brix_teacher_unlocked","1");
+  go("teacher-menu");
+}
+
+function teacherMenu(){
+  if(sessionStorage.getItem("brix_teacher_unlocked")!=="1"){go("teacher");return}
+  imageScreen(
+    "teacher-menu-screen clean-login-screen",
+    "/public/screens/brixlab-desktop.png",
+    "/public/screens/brixlab-mobile.png",
+    '<div class="auth-wrap"><div class="auth-card teacher-menu-card"><h1>מה נרצה לעשות?</h1><p class="auth-subtitle">בחרו כיצד להמשיך</p><button class="auth-primary" onclick="go(\'new-session\')">פתיחת כיתה חדשה <span>‹</span></button><button class="auth-secondary" onclick="go(\'existing-session\')">כניסה לכיתה קיימת</button><button class="auth-link" onclick="go(\'teacher\')">חזרה</button></div></div>'
+  );
+}
+
+function existingSession(){
+  if(sessionStorage.getItem("brix_teacher_unlocked")!=="1"){go("teacher");return}
+  imageScreen(
+    "existing-session-screen clean-login-screen",
+    "/public/screens/brixlab-desktop.png",
+    "/public/screens/brixlab-mobile.png",
+    '<div class="auth-wrap"><div class="auth-card"><h1>כניסה לכיתה קיימת</h1><div id="existingMsg"></div><label class="auth-field"><span>קוד כיתה</span><input id="existingClassCode" inputmode="numeric" maxlength="6" placeholder="הקלידו קוד כיתה"></label><button class="auth-primary" onclick="resumeExistingSession()">כניסה לכיתה <span>‹</span></button><button class="auth-link" onclick="go(\'teacher-menu\')">חזרה</button></div></div>'
+  );
+}
+
+async function resumeExistingSession(){
+  const code=(document.getElementById("existingClassCode")?.value||"").trim();
+  const msg=document.getElementById("existingMsg");
+  if(!code){msg.innerHTML='<div class="inline-error">יש להזין קוד כיתה.</div>';return}
+  msg.innerHTML='<div class="inline-error neutral">האפשרות להתחבר לכיתה קיימת תחובר בשלב הבא.</div>';
 }
 
 function newSession(){
