@@ -184,7 +184,11 @@ async function controlQuiz(question,phase){
 function projectionQuizHtml(qd){
   if(!qd || !qd.question || qd.phase==="closed" || qd.phase==="finished")return "";
   const item=quizQuestion(qd.question), cur=qd.current||{}, total=Number(qd.student_count||0);
-  return '<section class="projection-section card projection-quiz-card"><div class="section-title-row"><div><span class="student-kicker">בדיקת ידע · שאלה '+qd.question+' מתוך 10</span><h2>'+esc(item.q)+'</h2></div><strong>'+Number(cur.answered||0)+' / '+total+' ענו</strong></div>'+quizDistributionHtml(cur,item,total,true)+(qd.phase==="revealed"?'<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div>':'')+'</section>';
+  const head='<div class="section-title-row"><div><span class="student-kicker">בדיקת ידע · שאלה '+qd.question+' מתוך 10</span><h2>'+esc(item.q)+'</h2></div><strong>'+Number(cur.answered||0)+' / '+total+' ענו</strong></div>';
+  if(qd.phase==="answering"){
+    return '<section class="projection-section card projection-quiz-card">'+head+'<div class="quiz-projection-wait"><strong>חושבים ועונים באופן אישי</strong><span>ההתפלגות תיחשף רק אחרי סגירת המענה, כדי לא להשפיע על התשובות.</span></div></section>';
+  }
+  return '<section class="projection-section card projection-quiz-card">'+head+quizDistributionHtml(cur,item,total,true)+'<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div></section>';
 }
 
 async function studentRoom(){
