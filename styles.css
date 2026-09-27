@@ -3241,3 +3241,133 @@ button{cursor:pointer}
     font-size:11px;
   }
 }
+
+/* Beverage comparison bar charts */
+.graph-choice-explain{
+  border:1px solid #dbe8ea;
+  background:linear-gradient(135deg,#f6fbfb,#fffaf0);
+  border-radius:18px;
+  padding:15px;
+  margin:14px 0;
+}
+.graph-choice-explain h2{
+  margin:5px 0 8px;
+  color:var(--navy);
+  font-size:20px;
+}
+.graph-choice-explain p{
+  margin:7px 0;
+  color:#506970;
+  line-height:1.55;
+}
+.bar-chart-card{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  background:#fff;
+}
+.sample-bar-chart{
+  width:100%;
+  overflow-x:auto;
+}
+.sample-bar-chart svg{
+  width:100%;
+  min-width:560px;
+  height:auto;
+  display:block;
+}
+.sample-bar-chart .gridline{
+  stroke:#e6eeee;
+  stroke-width:1;
+}
+.sample-bar-chart .axis-line{
+  stroke:#17395f;
+  stroke-width:2.2;
+}
+.sample-bar-chart .axis-title{
+  font-size:13px;
+  fill:#31525c;
+  font-weight:800;
+  text-anchor:middle;
+}
+.sample-bar-chart .tick-label{
+  font-size:10px;
+  fill:#71888e;
+  text-anchor:end;
+}
+.sample-bar-chart .bar-item rect{
+  fill:#2aa0a7;
+}
+.sample-bar-chart .bar-value{
+  font-size:11px;
+  font-weight:900;
+  fill:#17395f;
+  text-anchor:middle;
+}
+.sample-bar-chart .bar-label{
+  font-size:10px;
+  font-weight:800;
+  fill:#425e65;
+  text-anchor:middle;
+}
+.teacher-sample-section{
+  overflow:hidden;
+}
+.teacher-group-sample-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.teacher-group-sample-graph{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:12px;
+  background:#fbfdfd;
+}
+.group-sample-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.group-sample-head h3{
+  margin:0;
+  color:var(--navy);
+}
+.group-sample-head span{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+}
+.teacher-summary-sample-graph{
+  margin-top:16px;
+  border-top:1px solid var(--line);
+  padding-top:16px;
+}
+.sample-compare-note{
+  display:grid;
+  gap:5px;
+  margin-top:16px;
+  border:1px dashed #c9dcdf;
+  border-radius:16px;
+  padding:14px;
+  background:#f8fbfb;
+}
+.sample-compare-note strong{
+  color:var(--navy);
+}
+.sample-compare-note span{
+  color:var(--muted);
+  line-height:1.5;
+}
+
+@media(max-width:850px){
+  .teacher-group-sample-grid{
+    grid-template-columns:1fr;
+  }
+  .sample-bar-chart svg{
+    min-width:500px;
+  }
+}
