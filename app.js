@@ -8,7 +8,7 @@ async function api(action,payload={}){
   return j.data;
 }
 function shell(content,cls=""){root.innerHTML='<div class="shell '+cls+'">'+content+'</div>'}
-function brand(){return '<div class="brand"><div class="logo">Brix<span>Lab</span></div><div class="tag">מתוק ומדויק</div><div class="subtag">חוקרים • מודדים • מתנסים • יוצרים</div></div>'}
+function brand(){return '<div class="brand brand-image"><img src="/public/screens/brix-loho.png" alt="BrixLab - מתוק ומדויק"></div>'}
 function go(view){location.hash=view}
 window.addEventListener("hashchange",router);
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
@@ -31,19 +31,20 @@ function studentLogin(){
     "student-login-screen clean-login-screen",
     "/public/screens/brixlab-desktop.png",
     "/public/screens/brixlab-mobile.png",
-    '<div class="auth-wrap"><div class="auth-card"><h1>כניסת תלמיד</h1><div id="msg"></div><label class="auth-field"><span>קוד כיתה</span><input id="classCode" inputmode="numeric" maxlength="6" placeholder="הקלידו קוד כיתה"></label><label class="auth-field"><span>שם פרטי</span><input id="firstName" placeholder="הקלידו שם פרטי"></label><button class="auth-primary" onclick="joinClass()">נכנסים למעבדה <span>‹</span></button><button class="auth-link" onclick="go(\'home\')">חזרה למסך הבית</button></div></div>'
+    '<div class="auth-wrap"><div class="auth-card"><h1>כניסת תלמיד</h1><div id="msg"></div><label class="auth-field"><span>קוד כיתה</span><input id="classCode" inputmode="numeric" maxlength="6" placeholder="הקלידו קוד כיתה"></label><label class="auth-field"><span>שם פרטי</span><input id="firstName" placeholder="הקלידו שם פרטי"></label><label class="auth-field"><span>מספר קבוצה</span><input id="groupNumber" inputmode="numeric" min="1" max="20" placeholder="לפי הקצאת המורה"></label><button class="auth-primary" onclick="joinClass()">נכנסים למעבדה <span>‹</span></button><button class="auth-link" onclick="go(\'home\')">חזרה למסך הבית</button></div></div>'
   );
 }
 async function joinClass(){
  const classCode=document.getElementById("classCode").value.trim();
  const firstName=document.getElementById("firstName").value.trim();
+ const groupNumber=Number(document.getElementById("groupNumber").value);
  const msg=document.getElementById("msg");
  msg.innerHTML="";
- if(!classCode||!firstName){msg.innerHTML='<div class="floating-error">צריך למלא קוד כיתה ושם פרטי.</div>';return}
+ if(!classCode||!firstName||!Number.isInteger(groupNumber)||groupNumber<1){msg.innerHTML='<div class="floating-error">צריך למלא קוד כיתה, שם פרטי ומספר קבוצה.</div>';return}
  try{
-  const data=await api("join_session",{class_code:classCode,first_name:firstName});
+  const data=await api("join_session",{class_code:classCode,first_name:firstName,group_number:groupNumber});
   localStorage.setItem("brix_student",JSON.stringify(data)); go("student-room");
- }catch(e){msg.innerHTML='<div class="floating-error">לא מצאתי שיעור פתוח עם הקוד הזה.</div>'}
+ }catch(e){msg.innerHTML='<div class="floating-error">לא ניתן להצטרף. בדקו את קוד הכיתה ואת מספר הקבוצה שהמורה הקצתה.</div>'}
 }
 function studentRoom(){
  const s=JSON.parse(localStorage.getItem("brix_student")||"null");
