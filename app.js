@@ -176,7 +176,9 @@ function teacherTriviaOptionsHtml(cur,item,phase){
 }
 
 function teacherQuizHtml(qd,currentStage=2){
-  if(!qd)return "";
+  if(!qd){
+    return '<section class="card teacher-quiz-card teacher-trivia-card trivia-start-card"><div class="trivia-start-icon">?</div><span class="student-kicker">שלב 3 · Brix Quiz</span><h2>בדיקת הידע מוכנה</h2><p>פתחו את השלב לכיתה והתחילו בשאלה הראשונה.</p><div class="teacher-trivia-actions"><button class="btn quiz-project-btn" onclick="projectQuizNow()">תצוגת הקרנה</button><button class="btn primary trivia-start-btn" onclick="startTeacherQuiz()">פתיחת בדיקת הידע ושאלה 1</button></div></section>';
+  }
   const n=Number(qd.question||0), phase=qd.phase||"closed", item=quizQuestion(n), total=Number(qd.student_count||0), cur=qd.current||{};
   const projectBtn='<button class="btn quiz-project-btn" onclick="projectQuizNow()">הקרנה לכיתה</button>';
 
@@ -1186,8 +1188,9 @@ function teacherWorkspaceTabs(session){
   const max=Number(session?.max_stage_opened||0);
   const labels=["פתיחה","ניסוי","בדיקת ידע","מסקנות וחקר"];
   return '<div class="teacher-workspace-tabs" role="tablist" aria-label="תצוגת תוצאות לפי שלב">'+labels.map((label,i)=>{
-    const open=i<=max, active=Number(window.__teacherWorkspaceTab)===i;
-    return '<button type="button" data-workspace-color="'+i+'" class="workspace-color-'+i+' '+(active?'active ':'')+(open?'open':'locked')+'" '+(open?'onclick="setTeacherWorkspaceTab('+i+')"':'disabled')+'><span>'+(i+1)+'</span><b>'+label+'</b></button>';
+    const available=i<=max, active=Number(window.__teacherWorkspaceTab)===i;
+    const status=available?'פתוח לכיתה':'תצוגת מורה';
+    return '<button type="button" data-workspace-color="'+i+'" class="workspace-color-'+i+' '+(active?'active ':'')+(available?'open':'preview')+'" onclick="setTeacherWorkspaceTab('+i+')"><span>'+(i+1)+'</span><b>'+label+'</b><small>'+status+'</small></button>';
   }).join('')+'<div class="live-indicator"><i></i><span>מתעדכן אונליין</span></div></div>';
 }
 
@@ -1586,6 +1589,45 @@ function renderTeacherProjection(data,quizData=null,groupWorkData=null){
   }
 }
 
+
+function teacherOpeningLiveHtml(data){
+  const total=Math.max(Number(data?.student_count||0),0);
+  const submitted=Number(data?.opening?.submitted_count||0);
+  const pct=total?Math.round(submitted/total*100):0;
+  const survey=data?.opening?.survey||{};
+  const options=[
+    ["פעם ביום",Number(survey.daily||0),"daily"],
+    ["פעם בשבוע",Number(survey.weekly||0),"weekly"],
+    ["רק באירועים",Number(survey.events||0),"events"],
+    ["לא שותה ממותק",Number(survey.never||0),"never"]
+  ];
+  const guesses=data?.opening?.guess_averages||{};
+  return '<section data-teacher-main-tab="0" class="card opening-live-card teacher-opening-workspace">'+
+    '<div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה · תוצאות בזמן אמת</span><h2>מה הכיתה חושבת?</h2><p>התוצאות מתעדכנות אוטומטית בזמן שהתלמידים שולחים תשובות.</p></div><div class="opening-live-counter"><strong>'+submitted+' / '+total+'</strong><span>ענו</span></div></div>'+
+    '<div class="opening-response-progress"><div><i style="width:'+pct+'%"></i></div><strong>'+pct+'%</strong></div>'+
+    '<div class="teacher-survey live-survey-grid">'+options.map(([label,count,key])=>{
+      const share=submitted?Math.round(count/submitted*100):0;
+      return '<div class="live-survey-card survey-'+key+'"><span>'+label+'</span><b>'+count+'</b><small>'+share+'%</small><div><i style="width:'+share+'%"></i></div></div>';
+    }).join('')+'</div>'+
+    '<div class="guess-averages live-guess-card"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+esc(guesses.cola??'—')+'</b></span><span>תפוזים <b>'+esc(guesses.orange??'—')+'</b></span><span>תה קר <b>'+esc(guesses.iced_tea??'—')+'</b></span><span>אנרגיה <b>'+esc(guesses.energy??'—')+'</b></span></div></div>'+
+  '</section>';
+}
+
+async function startTeacherQuiz(){
+  const t=JSON.parse(localStorage.getItem("brix_teacher")||"null");
+  if(!t)return;
+  try{
+    await api("set_stage",{session_id:t.session_id,teacher_token:t.teacher_token,stage:2});
+    await api("quiz_control",{session_id:t.session_id,teacher_token:t.teacher_token,question:1,phase:"answering"});
+    window.__teacherWorkspaceTab=2;
+    dashboard();
+  }catch(e){}
+}
+
+function teacherGroupWorkPlaceholder(currentStage){
+  return '<section class="card teacher-group-work-section teacher-group-work-placeholder"><span class="student-kicker">שלב 4 · מסקנות וחקר</span><h2>מסקנות ותכנון חקר המשך</h2><p>כאן יופיעו תוצרי הקבוצות בזמן אמת לאחר פתיחת השלב.</p>'+(Number(currentStage)<3?'<button class="btn primary" onclick="setStage(3)">פתיחת מסקנות וחקר לכיתה</button>':'')+'</section>';
+}
+
 async function dashboard(){
  const t=JSON.parse(localStorage.getItem("brix_teacher")||"null");
  if(!t){go("new-session");return}
@@ -1602,12 +1644,8 @@ async function dashboard(){
  const maxStage=s.max_stage_opened;
  let quizData=null;
  let groupWorkData=null;
- if(maxStage>=2){
-   try{quizData=await api("quiz_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
- }
- if(maxStage>=3){
-   try{groupWorkData=await api("group_work_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
- }
+ try{quizData=await api("quiz_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
+ try{groupWorkData=await api("group_work_dashboard",{session_id:t.session_id,teacher_token:t.teacher_token})}catch(e){}
  const projecting=document.body.classList.contains("projection-mode");
  if(projecting){
    renderTeacherProjection(data,quizData,groupWorkData);
@@ -1618,7 +1656,7 @@ async function dashboard(){
  const joinUrl=location.origin+location.pathname+'#student?code='+encodeURIComponent(s.class_code);
  window.__brixJoinUrl=joinUrl;
  const qr='https://quickchart.io/qr?size=180&text='+encodeURIComponent(joinUrl);
- const stageNames=["פתיחה","ניסוי עצמאי","בדיקת ידע","מסקנות וחקר"];
+ const stageNames=["פתיחה","ניסוי וגרפים","בדיקת ידע","מסקנות וחקר"];
  const actionHtml=s.current_stage===0
    ? '<button class="btn primary" onclick="setStage(1)">'+(s.max_stage_opened>=1?'מעבר לניסוי':'פתיחת הניסוי')+'</button>'
    : s.current_stage===1
@@ -1651,10 +1689,10 @@ async function dashboard(){
    '</aside>'+
    '<main class="teacher-main">'+
      teacherWorkspaceTabs(s)+
-     '<section data-teacher-main-tab="0" class="card opening-live-card teacher-opening-workspace compact-opening-results stage-section stage-section-opening"><div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה · תוצאות בזמן אמת</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
-     (Number(s.max_stage_opened)>=1?'<div class="teacher-experiment-workspace teacher-theme-experiment" data-teacher-main-tab="1">'+teacherExperimentTabs(data)+teacherZeroCheckHtml(data)+'<section class="card class-calibration-card stage-section stage-section-calibration teacher-exp-panel" data-teacher-exp-part="2"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 2</span><h2>מדידות הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+teacherSampleMeasurementHtml(data)+teacherSampleComparisonHtml(data)+'</div>':'')+
-     (Number(s.max_stage_opened)>=2?'<div data-teacher-main-tab="2" class="teacher-quiz-workspace teacher-theme-quiz">'+teacherQuizHtml(quizData,s.current_stage)+'</div>':'')+
-     (Number(s.max_stage_opened)>=3?'<div data-teacher-main-tab="3" class="teacher-conclusions-workspace teacher-theme-conclusions">'+teacherGroupWorkHtml(groupWorkData)+'</div>':'')+
+     teacherOpeningLiveHtml(data)+
+     '<div class="teacher-experiment-workspace teacher-theme-experiment" data-teacher-main-tab="1">'+teacherExperimentTabs(data)+teacherZeroCheckHtml(data)+'<section class="card class-calibration-card stage-section stage-section-calibration teacher-exp-panel" data-teacher-exp-part="2"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 2</span><h2>מדידות הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+teacherSampleMeasurementHtml(data)+teacherSampleComparisonHtml(data)+'</div>'+
+     '<div data-teacher-main-tab="2" class="teacher-quiz-workspace teacher-theme-quiz">'+teacherQuizHtml(quizData,s.current_stage)+'</div>'+
+     '<div data-teacher-main-tab="3" class="teacher-conclusions-workspace teacher-theme-conclusions">'+(groupWorkData?teacherGroupWorkHtml(groupWorkData):teacherGroupWorkPlaceholder(s.current_stage))+'</div>'+
      '<div class="card dashboard-summary progress-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
      '<section class="card groups-progress-card"><div class="section-title-row"><div><span class="student-kicker">בסוף · התקדמות הכיתה</span><h2>התקדמות הקבוצות</h2></div><p>כאן רואים מה כל קבוצה כבר ביצעה — לא מי מחובר.</p></div><div class="groups-progress-grid">'+groupCards+'</div></section>'+
    '</main>'+
