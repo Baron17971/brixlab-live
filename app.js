@@ -472,7 +472,7 @@ function studentExperimentProgress(current){
 function studentExperiment(s,state){
   const step=Number(state.experiment_step||0);
   if(step>=4){
-    renderSampleStage(s,state);
+    renderExperimentReview(s,state);
     return;
   }
   if(step>=3){
@@ -833,6 +833,31 @@ function showEquationUse(){
   document.getElementById('equationBox').innerHTML+='<div class="equation-use"><h3>מהמדידה אל הריכוז</h3><p>נניח שמדדנו דגימה וקיבלנו <strong>'+sampleY+'° Brix</strong>.</p><div class="solve-line"><span>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>'+sampleY+' = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+' )+' '+Math.abs(m.b).toFixed(2)+'</span><span>x ≈ <strong>'+x.toFixed(2)+' גרם/100 מ״ל</strong></span></div><p class="science-note">כך מודל שנבנה מנתוני הכיול מאפשר לנו לאמוד את ריכוז הסוכר בדגימה שאיננו יודעים את ריכוזה מראש.</p><button class="btn primary experiment-main-btn" onclick="startSampleStage()">הבנתי — ממשיכים לשלב 4: בדיקת דגימות</button></div>';
 }
 
+
+function renderExperimentReview(s,state){
+  clearTimeout(window.__studentTimer);
+  const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
+  window.__brixModelState=state||{};
+  window.__brixSampleState=state||{};
+  const rows=(state?.calibration||[]).slice().sort((a,b)=>Number(a.solution_number)-Number(b.solution_number));
+  const pts=rows
+    .filter(r=>r.sugar_concentration!=null && r.brix_value!=null)
+    .map(r=>({x:Number(r.sugar_concentration),y:Number(r.brix_value),n:Number(r.solution_number)}))
+    .sort((a,b)=>a.x-b.x);
+  const model=pts.length>=2?linearModel(pts):null;
+  const table=rows.length
+    ? '<div class="student-calibration-table-wrap"><table class="student-calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז הסוכר<br><small>g/100mL</small></th><th>מדידת המומסים<br><small>°Brix</small></th></tr></thead><tbody>'+rows.map(r=>'<tr><td data-label="תמיסה"><b>תמיסה '+r.solution_number+'</b></td><td data-label="ריכוז הסוכר">'+Number(r.sugar_concentration).toFixed(2)+'</td><td data-label="°Brix">'+Number(r.brix_value).toFixed(1)+'</td></tr>').join('')+'</tbody></table></div>'
+    : '<div class="feedback-try">אין עדיין נתוני כיול שמורים לקבוצה.</div>';
+  const graph=pts.length>=2
+    ? '<div class="calibration-graph review-calibration-graph">'+calibrationSvg(pts,true,true)+'</div>'
+    : '';
+  const equation=model
+    ? '<div class="equation-card review-equation-card"><span>משוואת קו הכיול של הקבוצה</span><strong>y = '+model.a.toFixed(2)+'x '+(model.b<0?'−':'+')+' '+Math.abs(model.b).toFixed(2)+'</strong><div class="equation-legend"><span><b>x</b> = ריכוז הסוכר</span><span><b>y</b> = °Brix</span></div></div>'
+    : '';
+  const hasSamples=(state?.samples||[]).length>0;
+  shell('<div class="student-experiment-shell model-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(3)+'<main class="model-main"><section class="model-card card experiment-review-card"><span class="student-kicker">שלב הניסוי · הנתונים והמודל שלנו</span><h1>עקומת הכיול של הקבוצה</h1><p class="model-lead">כאן נשמרים טבלת המדידות, עקומת הכיול ומשוואת הישר שבניתם. אפשר לחזור אליהם בכל שלב.</p>'+table+graph+equation+'<div class="equation-next-actions"><button class="btn ghost" onclick="renderCalibrationDone(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixModelState)">לבנייה מחדש של המודל</button><button class="btn primary" onclick="'+(hasSamples?'renderSampleSummary(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)':'renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)')+'">'+(hasSamples?'לתוצאות הדגימות':'לדגימות')+'</button></div></section></main></div>');
+}
+
 async function startSampleStage(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
@@ -896,7 +921,7 @@ function renderSampleStage(s,state){
       (locked?'<div class="group-field-lock">הדגימה נעולה כדי שלא תידרס.</div>':'')+'</article>';
   }).join("");
 
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים דגימות לא ידועות</h1><p class="samples-lead">זהו מרחב קבוצתי משותף. כל תלמיד יכול להזין דגימות אחרות; דגימה שכבר נשמרה על ידי חבר קבוצה אחר תופיע לכולם אך תהיה נעולה לעריכה.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות שלי</button></section></main></div>');
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(4)+'<main class="samples-main"><section class="samples-card card"><span class="student-kicker">מהמודל לדגימה</span><h1>בודקים דגימות לא ידועות</h1><p class="samples-lead">זהו מרחב קבוצתי משותף. כל תלמיד יכול להזין דגימות אחרות; דגימה שכבר נשמרה על ידי חבר קבוצה אחר תופיע לכולם אך תהיה נעולה לעריכה.</p>'+modelBox+'<div class="manual-learning-note"><strong>איך עובדים?</strong><span>מודדים Brix → זהו y → מציבים במשוואה → פותרים עבור x → מקבלים את ריכוז הסוכר המשוער.</span></div><button class="btn ghost experiment-model-back" onclick="renderExperimentReview(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">טבלת הכיול · הגרף · המשוואה</button><div class="sample-grid">'+manualCards+autoCards+'</div><div id="samplesMsg"></div><button class="btn primary experiment-main-btn" onclick="saveSamples()">שמירת הדגימות שלי</button></section></main></div>');
 }
 
 function unlockAutoSamplesInPlace(){
@@ -1082,7 +1107,7 @@ function renderSampleSummary(s,state){
   const stage=Number(state?.current_stage ?? sessionStorage.getItem("brix_student_stage") ?? 1);
   const rows=(state?.samples||[]);
   window.__brixSampleState=state;
-  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(5)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין הדגימות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג הדגימה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
+  shell('<div class="student-experiment-shell samples-shell"><header class="student-experiment-head">'+brand()+'<div class="student-chip">'+esc(s.first_name)+' · '+esc(s.group_name)+'</div></header>'+lessonProgress(studentUnlockedThrough(stage),1,true)+studentExperimentProgress(5)+'<main class="samples-main"><section class="samples-card card"><div class="done-mark">✓</div><span class="student-kicker">מהמודל לדגימה</span><h1>המדידות נשמרו</h1><p class="samples-lead">עכשיו נרצה להשוות בין הדגימות בצורה חזותית.</p><div class="sample-summary-grid">'+rows.map(r=>'<div><span>'+esc(r.sample_name)+'</span><b>'+Number(r.brix_value).toFixed(1)+'° Brix</b><strong>'+Number(r.estimated_sugar).toFixed(2)+' g/100mL</strong></div>').join('')+'</div><div class="graph-choice-explain"><span class="student-kicker">איזה גרף מתאים?</span><h2>כאן נבחר גרף עמודות</h2><p><strong>המשתנה הבלתי־תלוי הוא סוג הדגימה.</strong> זהו משתנה בדיד ולא רציף: קולה, מיץ תפוזים, תה קר וכדומה. לכן לא מחברים בין הערכים בקו רציף — משווים ביניהם באמצעות עמודות.</p><p><strong>המשתנה התלוי:</strong> ריכוז הסוכר המשוער, בגרם ל־100 מ״ל.</p></div><button id="buildSampleBarBtn" class="btn primary experiment-main-btn" onclick="showSampleBarChart()">בניית גרף עמודות</button><div id="sampleBarChartWrap"></div><div class="science-note"><strong>חשוב:</strong> הרפרקטומטר מודד את כלל החומרים המומסים. במשקאות אמיתיים החישוב הוא אומדן לריכוז הסוכר.</div><button class="btn ghost experiment-main-btn" onclick="renderExperimentReview(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">טבלת הכיול · הגרף · המשוואה</button><button class="btn ghost experiment-main-btn" onclick="renderSampleStage(JSON.parse(localStorage.getItem(&quot;brix_student&quot;)),window.__brixSampleState)">עריכת הדגימות</button></section></main></div>');
 }
 
 function calibrationSvg(pts,trend,equation){
