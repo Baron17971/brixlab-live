@@ -5240,3 +5240,26 @@ button{cursor:pointer}
     min-height:102px;
   }
 }
+
+.teacher-experiment-tabs button{
+  flex-wrap:wrap;
+}
+.teacher-experiment-tabs button small{
+  width:100%;
+  text-align:center;
+  font-size:8px;
+  line-height:1;
+  font-weight:800;
+  opacity:.68;
+}
+.teacher-experiment-tabs button.preview{
+  opacity:.78;
+  border-style:dashed;
+}
+.teacher-experiment-tabs button.preview:hover{
+  opacity:1;
+}
+.teacher-experiment-tabs button.active small{
+  color:rgba(255,255,255,.78);
+  opacity:1;
+}
