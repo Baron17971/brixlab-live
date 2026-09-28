@@ -390,7 +390,7 @@ async function showStudentOpeningReview(){
   const a=state.opening_answer||{};
   const labels={daily:"פעם ביום",weekly:"פעם בשבוע",events:"רק באירועים מיוחדים",never:"לא שותה ממותק"};
   const g=a.guesses||{};
-  shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header>'+lessonProgress(studentUnlockedThrough(state.max_stage_opened??state.current_stage),0,true)+'<main class="student-opening-main review-main"><section class="opening-card review-card"><span class="student-kicker">שלב פתיחה · נשאר פתוח</span><h1>התשובות שלכם</h1><div class="review-answer"><span>תדירות שתיית משקאות ממותקים</span><strong>'+esc(labels[a.survey_option]||"—")+'</strong></div><div class="review-guesses"><h3>הניחושים שלכם</h3><div><span>קולה <b>'+esc(g.cola??"—")+'</b></span><span>תפוזים <b>'+esc(g.orange??"—")+'</b></span><span>תה קר <b>'+esc(g.iced_tea??"—")+'</b></span><span>אנרגיה <b>'+esc(g.energy??"—")+'</b></span></div></div>'+(state.current_stage>=1?'<button class="btn primary" onclick="showStudentExperiment()">חזרה לניסוי</button>':'')+'</section></main></div>');
+  shell('<div class="student-opening-shell"><header class="student-opening-head">'+brand()+'<div><strong>'+esc(s.first_name)+'</strong><span>'+esc(s.group_name)+'</span></div></header>'+lessonProgress(studentUnlockedThrough(state.max_stage_opened??state.current_stage),0,true)+'<main class="student-opening-main review-main"><section class="opening-card review-card"><span class="student-kicker">שלב פתיחה · נשאר פתוח</span><h1>התשובות שלכם</h1><div class="review-answer"><span>תדירות שתיית משקאות ממותקים</span><strong>'+esc(labels[a.survey_option]||"—")+'</strong></div><div class="review-guesses"><h3>הניחושים שלכם</h3><div><span>קולה <b>'+esc(g.cola??"—")+'</b></span><span>תפוזים <b>'+esc(g.orange??"—")+'</b></span><span>תה קר <b>'+esc(g.iced_tea??"—")+'</b></span><span>אנרגיה <b>'+esc(g.energy??"—")+'</b></span></div></div>'+(studentUnlockedThrough(state.max_stage_opened??state.current_stage)>=1?'<button class="btn primary" onclick="showStudentExperiment()">חזרה לניסוי</button>':'')+'</section></main></div>');
 }
 
 function studentOpening(s,state={}){
@@ -971,7 +971,7 @@ async function saveSamples(){
     if(!name && !rawY)continue;
     const brix=Number(rawY);
     if(!name || rawY==='' || !Number.isFinite(brix) || brix<0 || brix>100){
-      msg.innerHTML='<div class="feedback-try">בדגימה '+n+' יש להשלים גם שם משקה וגם ערך Brix.</div>';
+      msg.innerHTML='<div class="feedback-try">בדגימה '+n+' יש להשלים גם שם דגימה וגם ערך Brix.</div>';
       return;
     }
 
