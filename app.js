@@ -1134,6 +1134,70 @@ function showSampleBarChart(){
   if(btn)btn.disabled=true;
 }
 
+
+window.__teacherExperimentTab=window.__teacherExperimentTab||1;
+
+function teacherExperimentTabs(data){
+  const groups=data?.groups||[];
+  const anyZero=groups.some(g=>Number(g.max_experiment_step||0)>=2);
+  const anyCalibration=(data?.calibration_summary||[]).some(r=>Number(r.reported_groups||0)>0);
+  const anyModel=teacherCalibrationPoints(data).length>=2;
+  const anySamples=groups.some(g=>(g.samples||[]).length>0);
+  const comparable=(data?.sample_aggregate||[]).some(x=>x.comparable);
+  const unlocked=[true,anyZero||anyCalibration,anyCalibration||anyModel,anySamples,comparable||anySamples];
+  if(!unlocked[window.__teacherExperimentTab-1]){
+    window.__teacherExperimentTab=Math.max(1,unlocked.reduce((last,v,i)=>v?i+1:last,1));
+  }
+  const labels=["מכירים את המכשיר","מדידות כיול","בונים מודל","בודקים דגימות","משווים תוצאות"];
+  return '<div class="teacher-experiment-tabs" role="tablist" aria-label="חלקי הניסוי">'+labels.map((label,i)=>{
+    const part=i+1, open=unlocked[i], active=window.__teacherExperimentTab===part;
+    return '<button type="button" class="'+(active?'active ':'')+(open?'open':'locked')+'" '+(open?'onclick="setTeacherExperimentTab('+part+')"':'disabled')+'><span>'+part+'</span><b>'+label+'</b></button>';
+  }).join('')+'</div>';
+}
+
+function setTeacherExperimentTab(part){
+  window.__teacherExperimentTab=Number(part)||1;
+  applyTeacherExperimentTab();
+}
+
+function applyTeacherExperimentTab(){
+  document.querySelectorAll('[data-teacher-exp-part]').forEach(el=>{
+    el.hidden=Number(el.dataset.teacherExpPart)!==Number(window.__teacherExperimentTab||1);
+  });
+  document.querySelectorAll('.teacher-experiment-tabs button').forEach((btn,i)=>{
+    btn.classList.toggle('active',i+1===Number(window.__teacherExperimentTab||1));
+  });
+}
+
+function teacherZeroCheckHtml(data){
+  const groups=data?.groups||[];
+  const done=groups.filter(g=>Number(g.max_experiment_step||0)>=2).length;
+  return '<section class="card teacher-exp-panel teacher-zero-panel" data-teacher-exp-part="1"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 1</span><h2>מכירים את הרפרקטומטר ובדיקת אפס</h2></div><strong>'+done+' / '+groups.length+' קבוצות השלימו</strong></div><div class="teacher-zero-grid">'+groups.map(g=>{
+    const step=Number(g.max_experiment_step||0), ok=step>=2;
+    return '<article class="'+(ok?'done':'pending')+'"><div><h3>'+esc(g.group_name)+'</h3><span>'+((g.students||[]).map(esc).join(' · ')||'טרם הצטרפו')+'</span></div><b>'+(ok?'בדיקת אפס הושלמה ✓':step===1?'בודקים עכשיו':'טרם התחילו')+'</b></article>';
+  }).join('')+'</div></section>';
+}
+
+function teacherSampleMeasurementHtml(data){
+  const groups=(data.groups||[]).filter(g=>(g.samples||[]).length);
+  if(!groups.length){
+    return '<section class="card teacher-exp-panel teacher-sample-section" data-teacher-exp-part="4"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 4</span><h2>בודקים דגימות</h2></div></div><div class="graph-waiting"><strong>עדיין אין מדידות דגימה</strong><span>כשהקבוצות ישמרו דגימות, הגרפים שלהן יופיעו כאן.</span></div></section>';
+  }
+  const groupGraphs=groups.map(g=>
+    '<article class="teacher-group-sample-graph"><div class="group-sample-head"><h3>'+esc(g.group_name)+'</h3><span>'+(g.samples||[]).length+' דגימות</span></div><div class="sample-bar-chart">'+sampleBarChartSvg(g.samples||[])+'</div></article>'
+  ).join('');
+  return '<section class="card teacher-exp-panel teacher-sample-section" data-teacher-exp-part="4"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 4</span><h2>בדיקות הדגימות של הקבוצות</h2></div><p>כל גרף מבוסס על נתוני אותה קבוצה בלבד.</p></div><div class="teacher-group-sample-grid">'+groupGraphs+'</div></section>';
+}
+
+function teacherSampleComparisonHtml(data){
+  const agg=(data.sample_aggregate||[]).filter(x=>x.comparable);
+  const allGroupsComparable=agg.length>0 && agg.every(x=>Number(x.groups_reporting)===Number(data.session.group_count));
+  const body=allGroupsComparable
+    ? '<div class="teacher-summary-sample-graph"><div class="section-title-row"><div><span class="student-kicker">סיכום כיתתי</span><h2>ממוצע ריכוז הסוכר בין הקבוצות</h2></div><p>מוצגות רק דגימות שניתנות להשוואה בין הקבוצות.</p></div><div class="sample-bar-chart">'+sampleBarChartSvg(agg.map(x=>({sample_name:x.sample_name,estimated_sugar:x.average_estimated_sugar})))+'</div></div>'
+    : '<div class="sample-compare-note"><strong>עדיין אין גרף כיתתי מסכם.</strong><span>כדי לחשב ממוצע אמין, כל הקבוצות צריכות להזין את אותה דגימה באותו מספר ובאותו שם.</span></div>';
+  return '<section class="card teacher-exp-panel teacher-sample-compare" data-teacher-exp-part="5"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 5</span><h2>משווים תוצאות</h2></div></div>'+body+'</section>';
+}
+
 function teacherSampleGraphsHtml(data){
   const groups=(data.groups||[]).filter(g=>(g.samples||[]).length);
   if(!groups.length)return '';
@@ -1340,7 +1404,7 @@ function teacherCalibrationGraphHtml(data){
   const pts=teacherCalibrationPoints(data);
   window.__teacherCalibrationPoints=pts;
   if(pts.length<2){
-    return '<section class="card teacher-graph-card"><div class="section-title-row"><div><span class="student-kicker">הגרף הכיתתי</span><h2>גרף הכיול נבנה בזמן אמת</h2></div><p>ככל שהקבוצות שומרות מדידות, ממוצעי הכיתה הופכים לנקודות על הגרף.</p></div><div class="graph-waiting"><strong>עדיין אין מספיק נקודות</strong><span>נדרשות לפחות שתי תמיסות עם נתונים כדי להתחיל לראות את הקשר.</span></div></section>';
+    return '<section class="card teacher-graph-card teacher-exp-panel" data-teacher-exp-part="3"><div class="section-title-row"><div><span class="student-kicker">הגרף הכיתתי</span><h2>גרף הכיול נבנה בזמן אמת</h2></div><p>ככל שהקבוצות שומרות מדידות, ממוצעי הכיתה הופכים לנקודות על הגרף.</p></div><div class="graph-waiting"><strong>עדיין אין מספיק נקודות</strong><span>נדרשות לפחות שתי תמיסות עם נתונים כדי להתחיל לראות את הקשר.</span></div></section>';
   }
 
   const graph=calibrationSvg(pts,window.__teacherTrendVisible,window.__teacherEquationVisible);
@@ -1349,7 +1413,7 @@ function teacherCalibrationGraphHtml(data){
     ? '<div class="teacher-equation-reveal"><span>משוואת קו הכיול</span><strong>y = '+m.a.toFixed(2)+'x '+(m.b<0?'−':'+')+' '+Math.abs(m.b).toFixed(2)+'</strong><p><b>x</b> = ריכוז הסוכר · <b>y</b> = ריכוז המומסים ב־°Brix</p><p class="equation-teach-note">בשלב הבא, כשנמדוד מיצים ומשקאות, נציב את ערך ה־Brix במקום y ונחשב את x — ריכוז הסוכר המשוער.</p></div>'
     : '';
 
-  return '<section class="card teacher-graph-card">'+
+  return '<section class="card teacher-graph-card teacher-exp-panel" data-teacher-exp-part="3">'+
     '<div class="section-title-row"><div><span class="student-kicker">הגרף הכיתתי</span><h2>מממוצעי הכיתה לגרף כיול</h2></div><p>הנקודות מתעדכנות אוטומטית לפי ממוצעי המדידות של הקבוצות. קו המגמה והמשוואה נחשפים רק כשהמורה בוחרת.</p></div>'+
     '<div class="teacher-live-points">'+pts.map(p=>'<span>תמיסה '+p.n+' · <b>'+p.x.toFixed(2)+'</b> g/100mL → <b>'+p.y.toFixed(2)+'</b> °Brix</span>').join('')+'</div>'+
     '<div class="calibration-graph teacher-calibration-graph">'+graph+'</div>'+
@@ -1498,8 +1562,7 @@ async function dashboard(){
    '</aside>'+
    '<main class="teacher-main">'+
      '<section class="card opening-live-card compact-opening-results stage-section stage-section-opening"><div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
-     '<section class="card class-calibration-card stage-section stage-section-calibration"><div class="section-title-row"><div><span class="student-kicker">שלב 2 · כיול</span><h2>ממוצעי הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה. כל שורה הופכת לנקודה בגרף הכיתתי.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+
-     teacherSampleGraphsHtml(data)+
+     (Number(s.max_stage_opened)>=1?'<div class="teacher-experiment-workspace">'+teacherExperimentTabs(data)+teacherZeroCheckHtml(data)+'<section class="card class-calibration-card stage-section stage-section-calibration teacher-exp-panel" data-teacher-exp-part="2"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 2</span><h2>מדידות הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+teacherSampleMeasurementHtml(data)+teacherSampleComparisonHtml(data)+'</div>':'')+
      (Number(s.max_stage_opened)>=2?teacherQuizHtml(quizData,s.current_stage):'')+
      (Number(s.max_stage_opened)>=3?teacherGroupWorkHtml(groupWorkData):'')+
      '<div class="card dashboard-summary progress-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
@@ -1508,6 +1571,7 @@ async function dashboard(){
  '</div>',
  "teacher-dashboard-shell "+(s.current_stage===0?"teacher-opening-shell":"")
  );
+ applyTeacherExperimentTab();
  clearTimeout(window.__brixTimer);
  window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")) dashboard();},5000);
 }
