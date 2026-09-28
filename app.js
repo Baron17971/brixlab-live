@@ -534,9 +534,11 @@ function studentExperiment(s,state){
 async function startBrixPractice(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
-  try{await api("update_student_progress",{student_id:s.student_id,experiment_step:1});}catch(e){}
   let state;
   try{state=await api("student_state",{student_id:s.student_id})}catch(e){state={experiment_step:1,current_stage:1,calibration:[],samples:[]}}
+  if(Number(state.experiment_step||0)<1){
+    try{await api("update_student_progress",{student_id:s.student_id,experiment_step:1});state.experiment_step=1;}catch(e){}
+  }
   renderBrixPractice(s,state);
 }
 
@@ -564,9 +566,11 @@ function checkRealBrixReading(){
 async function finishBrixPractice(score){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
-  try{await api("update_student_progress",{student_id:s.student_id,experiment_step:2,practice_score:score});}catch(e){}
   let state;
-  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state={current_stage:Number(sessionStorage.getItem("brix_student_stage")||1),calibration:[]}}
+  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state={experiment_step:2,current_stage:Number(sessionStorage.getItem("brix_student_stage")||1),calibration:[],samples:[]}}
+  if(Number(state.experiment_step||0)<2){
+    try{await api("update_student_progress",{student_id:s.student_id,experiment_step:2,practice_score:score});state.experiment_step=2;}catch(e){}
+  }
   renderCalibration(s,state);
 }
 
@@ -903,9 +907,11 @@ function renderExperimentReview(s,state){
 async function startSampleStage(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
-  try{await api("update_student_progress",{student_id:s.student_id,experiment_step:4,practice_score:0});}catch(e){}
   let state;
   try{state=await api("student_state",{student_id:s.student_id})}catch(e){state=window.__brixModelState||{}}
+  if(Number(state.experiment_step||0)<4){
+    try{await api("update_student_progress",{student_id:s.student_id,experiment_step:4,practice_score:0});state.experiment_step=4;}catch(e){}
+  }
   renderSampleStage(s,state);
 }
 
