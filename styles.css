@@ -3547,6 +3547,12 @@ button{cursor:pointer}
 .teacher-sample-section{
   order:4;
 }
+.teacher-quiz-card{
+  order:5;
+}
+.teacher-group-work-section{
+  order:6;
+}
 .progress-summary{
   order:90;
 }
@@ -3570,6 +3576,12 @@ button{cursor:pointer}
   }
   .teacher-main .teacher-sample-section{
     order:4 !important;
+  }
+  .teacher-main .teacher-quiz-card{
+    order:5 !important;
+  }
+  .teacher-main .teacher-group-work-section{
+    order:6 !important;
   }
   .teacher-main .progress-summary{
     order:90 !important;
