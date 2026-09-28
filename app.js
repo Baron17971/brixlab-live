@@ -1437,6 +1437,16 @@ async function copyJoinLink(url){
 
 window.__projectionTarget=null;
 
+async function projectOpeningNow(){
+  window.__projectionTarget="projection-opening";
+  window.__teacherWorkspaceTab=0;
+  if(!document.body.classList.contains("projection-mode")){
+    await toggleProjection();
+  }else if(location.hash.startsWith("#dashboard")){
+    dashboard();
+  }
+}
+
 async function projectQuizNow(){
   window.__projectionTarget="projection-quiz";
   window.__teacherWorkspaceTab=2;
@@ -1590,7 +1600,17 @@ function teacherProjectionHtml(data,quizData=null,groupWorkData=null){
       (Number(s.max_stage_opened||0)>=3&&groupWorkData?'<button onclick="document.getElementById(\'projection-group-work\')?.scrollIntoView({behavior:\'smooth\'})">4 · מסקנות וחקר</button>':'')+
     '</nav>'+
     '<main class="projection-main">'+
-      '<section id="projection-opening" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>מה חשבה הכיתה?</h2></div><strong class="projection-count">'+Number(survey.submitted_count||0)+' ענו</strong></div><div class="teacher-survey projection-survey"><div><span>פעם ביום</span><b>'+Number(surveyData.daily||0)+'</b></div><div><span>פעם בשבוע</span><b>'+Number(surveyData.weekly||0)+'</b></div><div><span>רק באירועים</span><b>'+Number(surveyData.events||0)+'</b></div><div><span>לא שותה ממותק</span><b>'+Number(surveyData.never||0)+'</b></div></div><div class="guess-averages projection-guesses"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+esc(guesses.cola??'—')+'</b></span><span>תפוזים <b>'+esc(guesses.orange??'—')+'</b></span><span>תה קר <b>'+esc(guesses.iced_tea??'—')+'</b></span><span>אנרגיה <b>'+esc(guesses.energy??'—')+'</b></span></div></div></section>'+
+      '<section id="projection-opening" class="projection-section card projection-opening-live">'+
+        '<div class="projection-opening-head"><div><span class="student-kicker">שלב 1 · סקר פתיחה · LIVE</span><h2>באיזו תדירות שותים משקאות ממותקים אצלך בבית?</h2></div><div class="projection-opening-count"><strong>'+Number(survey.submitted_count||0)+'</strong><span>ענו</span></div></div>'+
+        '<div class="projection-opening-progress"><div><i style="width:'+(Number(data.student_count||0)?Math.round(Number(survey.submitted_count||0)/Number(data.student_count||1)*100):0)+'%"></i></div><span>'+Number(survey.submitted_count||0)+' / '+Number(data.student_count||0)+'</span></div>'+
+        '<div class="projection-survey-cards">'+[
+          ['פעם ביום',Number(surveyData.daily||0),'a'],
+          ['פעם בשבוע',Number(surveyData.weekly||0),'b'],
+          ['רק באירועים מיוחדים',Number(surveyData.events||0),'c'],
+          ['לא שותה ממותק',Number(surveyData.never||0),'d']
+        ].map(([label,count,key])=>{const answered=Math.max(Number(survey.submitted_count||0),1),pct=Math.round(count/answered*100);return '<article class="projection-survey-card survey-card-'+key+'"><div><span>'+label+'</span><strong>'+count+'</strong></div><div class="projection-survey-bar"><i style="width:'+pct+'%"></i></div><b>'+pct+'%</b></article>'}).join('')+'</div>'+
+        '<div class="guess-averages projection-guesses projection-opening-guesses"><h3>כמה כפיות סוכר יש לדעתכם ב־500 מ״ל?</h3><div><span>קולה <b>'+esc(guesses.cola??'—')+'</b></span><span>תפוזים <b>'+esc(guesses.orange??'—')+'</b></span><span>תה קר <b>'+esc(guesses.iced_tea??'—')+'</b></span><span>אנרגיה <b>'+esc(guesses.energy??'—')+'</b></span></div></div>'+
+      '</section>'+
       (Number(s.max_stage_opened||0)>=1?'<section id="projection-calibration" class="projection-section card"><div class="section-title-row"><div><span class="student-kicker">שלב 2א · כיול</span><h2>גרף הכיול הכיתתי</h2></div><p>הגרף מבוסס על ממוצעי הכיתה בלבד.</p></div>'+calibrationBlock+'</section>'+projectionSampleSummaryHtml(data):'')+
       (Number(s.max_stage_opened||0)>=2?projectionQuizHtml(quizData):'')+
       (Number(s.max_stage_opened||0)>=3?projectionGroupWorkHtml(groupWorkData):'')+
@@ -1621,7 +1641,7 @@ function teacherOpeningLiveHtml(data){
   ];
   const guesses=data?.opening?.guess_averages||{};
   return '<section data-teacher-main-tab="0" class="card opening-live-card teacher-opening-workspace">'+
-    '<div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה · תוצאות בזמן אמת</span><h2>מה הכיתה חושבת?</h2><p>התוצאות מתעדכנות אוטומטית בזמן שהתלמידים שולחים תשובות.</p></div><div class="opening-live-counter"><strong>'+submitted+' / '+total+'</strong><span>ענו</span></div></div>'+
+    '<div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה · תוצאות בזמן אמת</span><h2>מה הכיתה חושבת?</h2><p>התוצאות מתעדכנות אוטומטית בזמן שהתלמידים שולחים תשובות.</p></div><div class="opening-live-actions"><button class="btn opening-project-btn" onclick="projectOpeningNow()">הקרנת הסקר</button><div class="opening-live-counter"><strong>'+submitted+' / '+total+'</strong><span>ענו</span></div></div></div>'+
     '<div class="opening-response-progress"><div><i style="width:'+pct+'%"></i></div><strong>'+pct+'%</strong></div>'+
     '<div class="teacher-survey live-survey-grid">'+options.map(([label,count,key])=>{
       const share=submitted?Math.round(count/submitted*100):0;
