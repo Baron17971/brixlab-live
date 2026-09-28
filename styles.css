@@ -5004,3 +5004,239 @@ button{cursor:pointer}
     background:rgba(255,255,255,.92);
   }
 }
+
+/* Teacher dashboard QA pass — clearer hierarchy, spacing and desktop rail */
+.teacher-workspace-tabs button{
+  flex-wrap:wrap;
+}
+.teacher-workspace-tabs button small{
+  width:100%;
+  font-size:9px;
+  line-height:1;
+  font-weight:800;
+  opacity:.68;
+}
+.teacher-workspace-tabs button.preview{
+  opacity:.78;
+  border-style:dashed;
+}
+.teacher-workspace-tabs button.preview:hover{
+  opacity:1;
+}
+.teacher-workspace-tabs button.active small{
+  color:rgba(255,255,255,.78);
+  opacity:1;
+}
+
+[data-teacher-main-tab]{
+  min-width:0;
+}
+.teacher-experiment-workspace,
+.teacher-quiz-workspace,
+.teacher-conclusions-workspace{
+  gap:18px;
+}
+.teacher-experiment-workspace:not([hidden]),
+.teacher-quiz-workspace:not([hidden]),
+.teacher-conclusions-workspace:not([hidden]){
+  display:grid;
+}
+.teacher-opening-workspace{
+  margin:0;
+}
+.teacher-main>.progress-summary,
+.teacher-main>.groups-progress-card{
+  margin-top:4px;
+}
+
+/* Live opening progress */
+.opening-live-counter{
+  min-width:104px;
+  min-height:82px;
+  border-radius:20px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  background:#eaf8f7;
+  border:1px solid #cce8e5;
+  color:#277b78;
+  box-shadow:0 8px 20px rgba(47,155,154,.08);
+}
+.opening-live-counter strong{
+  font-size:24px;
+  line-height:1;
+}
+.opening-live-counter span{
+  font-size:11px;
+  font-weight:900;
+  margin-top:5px;
+}
+.opening-response-progress{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+  margin:18px 0;
+}
+.opening-response-progress>div{
+  height:12px;
+  background:#e8f0f1;
+  border-radius:999px;
+  overflow:hidden;
+}
+.opening-response-progress i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#2f9b9a,#72c7bf);
+  transition:width .35s ease;
+}
+.opening-response-progress strong{
+  min-width:42px;
+  color:#277b78;
+}
+.live-survey-grid{
+  gap:12px;
+}
+.live-survey-card{
+  position:relative;
+  overflow:hidden;
+  min-height:118px;
+  padding:14px !important;
+  border-radius:18px !important;
+}
+.live-survey-card>b{
+  display:block;
+  margin:7px 0 2px;
+  font-size:28px;
+}
+.live-survey-card>small{
+  font-size:12px;
+  font-weight:900;
+  color:var(--muted);
+}
+.live-survey-card>div{
+  height:6px;
+  margin-top:10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  overflow:hidden;
+}
+.live-survey-card>div i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+}
+.survey-daily{background:#eef6fb !important}
+.survey-weekly{background:#eaf8f2 !important}
+.survey-events{background:#fff4e6 !important}
+.survey-never{background:#f5eef8 !important}
+.survey-daily>div i{background:#5a9fc4}
+.survey-weekly>div i{background:#64a980}
+.survey-events>div i{background:#dca258}
+.survey-never>div i{background:#9b77aa}
+.live-guess-card{
+  margin-top:16px;
+}
+
+/* Give active teacher cards breathing room */
+.teacher-exp-panel,
+.teacher-trivia-card,
+.teacher-group-work-section,
+.teacher-opening-workspace{
+  box-shadow:0 12px 30px rgba(16,55,70,.08);
+}
+.teacher-exp-panel + .teacher-exp-panel{
+  margin-top:0;
+}
+
+/* Wide desktop: move main teacher stage navigation to a vertical rail */
+@media(min-width:1100px){
+  .teacher-main{
+    grid-template-columns:190px minmax(0,1fr);
+    column-gap:20px;
+    row-gap:18px;
+    align-items:start;
+  }
+
+  .teacher-workspace-tabs{
+    grid-column:1;
+    grid-row:1 / span 8;
+    position:sticky;
+    top:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+    padding:10px;
+  }
+
+  .teacher-workspace-tabs button{
+    min-height:72px;
+    justify-content:flex-start;
+    text-align:right;
+    padding:12px 11px;
+  }
+
+  .teacher-workspace-tabs button span{
+    width:30px;
+    height:30px;
+  }
+
+  .teacher-workspace-tabs button b{
+    flex:1;
+    font-size:13px;
+  }
+
+  .teacher-workspace-tabs button small{
+    padding-right:38px;
+    text-align:right;
+  }
+
+  .teacher-workspace-tabs .live-indicator{
+    margin-top:4px;
+    width:100%;
+    box-sizing:border-box;
+  }
+
+  .teacher-main>[data-teacher-main-tab],
+  .teacher-main>.progress-summary,
+  .teacher-main>.groups-progress-card{
+    grid-column:2;
+  }
+
+  .teacher-opening-workspace,
+  .teacher-theme-quiz .teacher-trivia-card,
+  .teacher-theme-conclusions .teacher-group-work-section,
+  .teacher-theme-experiment .teacher-exp-panel{
+    min-height:500px;
+  }
+
+  .teacher-experiment-tabs{
+    position:static;
+    margin-bottom:2px;
+  }
+}
+
+/* Tablet/smaller desktop: keep stage tabs across the top */
+@media(min-width:851px) and (max-width:1099px){
+  .teacher-workspace-tabs{
+    position:static;
+  }
+}
+
+@media(max-width:850px){
+  .teacher-workspace-tabs button small{
+    font-size:8px;
+  }
+  .opening-live-counter{
+    min-width:84px;
+    min-height:68px;
+  }
+  .opening-live-counter strong{
+    font-size:20px;
+  }
+  .live-survey-card{
+    min-height:102px;
+  }
+}
