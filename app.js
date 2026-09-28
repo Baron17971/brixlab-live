@@ -1135,6 +1135,37 @@ function showSampleBarChart(){
 }
 
 
+
+window.__teacherWorkspaceTab=window.__teacherWorkspaceTab??null;
+
+function teacherWorkspaceTabs(session){
+  if(window.__teacherWorkspaceTab===null){
+    window.__teacherWorkspaceTab=Number(session?.current_stage||0);
+  }
+  const max=Number(session?.max_stage_opened||0);
+  const labels=["פתיחה","ניסוי","בדיקת ידע","מסקנות וחקר"];
+  return '<div class="teacher-workspace-tabs" role="tablist" aria-label="תצוגת תוצאות לפי שלב">'+labels.map((label,i)=>{
+    const open=i<=max, active=Number(window.__teacherWorkspaceTab)===i;
+    return '<button type="button" class="'+(active?'active ':'')+(open?'open':'locked')+'" '+(open?'onclick="setTeacherWorkspaceTab('+i+')"':'disabled')+'><span>'+(i+1)+'</span><b>'+label+'</b></button>';
+  }).join('')+'<div class="live-indicator"><i></i><span>מתעדכן אונליין</span></div></div>';
+}
+
+function setTeacherWorkspaceTab(tab){
+  window.__teacherWorkspaceTab=Number(tab)||0;
+  applyTeacherWorkspaceTab();
+}
+
+function applyTeacherWorkspaceTab(){
+  const tab=Number(window.__teacherWorkspaceTab??0);
+  document.querySelectorAll('[data-teacher-main-tab]').forEach(el=>{
+    el.hidden=Number(el.dataset.teacherMainTab)!==tab;
+  });
+  document.querySelectorAll('.teacher-workspace-tabs button').forEach((btn,i)=>{
+    btn.classList.toggle('active',i===tab);
+  });
+  if(tab===1) applyTeacherExperimentTab();
+}
+
 window.__teacherExperimentTab=window.__teacherExperimentTab||1;
 
 function teacherExperimentTabs(data){
@@ -1561,17 +1592,18 @@ async function dashboard(){
      '<div class="card teacher-control-card"><span class="student-kicker">השלב הנוכחי</span><h3>'+stageNames[s.current_stage]+'</h3><p>שלבים שכבר נפתחו נשארים זמינים. המורה שולטת רק במעברים הכיתתיים.</p>'+actionHtml+'</div>'+
    '</aside>'+
    '<main class="teacher-main">'+
-     '<section class="card opening-live-card compact-opening-results stage-section stage-section-opening"><div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
-     (Number(s.max_stage_opened)>=1?'<div class="teacher-experiment-workspace">'+teacherExperimentTabs(data)+teacherZeroCheckHtml(data)+'<section class="card class-calibration-card stage-section stage-section-calibration teacher-exp-panel" data-teacher-exp-part="2"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 2</span><h2>מדידות הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+teacherSampleMeasurementHtml(data)+teacherSampleComparisonHtml(data)+'</div>':'')+
-     (Number(s.max_stage_opened)>=2?teacherQuizHtml(quizData,s.current_stage):'')+
-     (Number(s.max_stage_opened)>=3?teacherGroupWorkHtml(groupWorkData):'')+
+     teacherWorkspaceTabs(s)+
+     '<section data-teacher-main-tab="0" class="card opening-live-card compact-opening-results stage-section stage-section-opening"><div class="opening-live-head"><div><span class="student-kicker">שלב 1 · פתיחה · תוצאות בזמן אמת</span><h2>תוצאות הסקר והניחושים</h2></div><strong>'+data.opening.submitted_count+' / '+data.student_count+' ענו</strong></div><div class="teacher-survey"><div><span>פעם ביום</span><b>'+data.opening.survey.daily+'</b></div><div><span>פעם בשבוע</span><b>'+data.opening.survey.weekly+'</b></div><div><span>רק באירועים</span><b>'+data.opening.survey.events+'</b></div><div><span>לא שותה ממותק</span><b>'+data.opening.survey.never+'</b></div></div><div class="guess-averages"><h3>ממוצע ניחושי הכיתה — כפיות ב־500 מ״ל</h3><div><span>קולה <b>'+data.opening.guess_averages.cola+'</b></span><span>תפוזים <b>'+data.opening.guess_averages.orange+'</b></span><span>תה קר <b>'+data.opening.guess_averages.iced_tea+'</b></span><span>אנרגיה <b>'+data.opening.guess_averages.energy+'</b></span></div></div></section>'+
+     (Number(s.max_stage_opened)>=1?'<div class="teacher-experiment-workspace" data-teacher-main-tab="1">'+teacherExperimentTabs(data)+teacherZeroCheckHtml(data)+'<section class="card class-calibration-card stage-section stage-section-calibration teacher-exp-panel" data-teacher-exp-part="2"><div class="section-title-row"><div><span class="student-kicker">ניסוי · חלק 2</span><h2>מדידות הכיול של הכיתה</h2></div><p>הטבלה מתעדכנת אוטומטית מכל קבוצה.</p></div><div class="table-wrap"><table class="calibration-table"><thead><tr><th>תמיסה</th><th>ריכוז סוכר<br><small>g/100mL</small></th><th>קבוצות שדיווחו</th><th>ממוצע Brix</th><th>טווח</th></tr></thead><tbody>'+calibrationRows+'</tbody></table></div></section>'+teacherCalibrationGraphHtml(data)+teacherSampleMeasurementHtml(data)+teacherSampleComparisonHtml(data)+'</div>':'')+
+     (Number(s.max_stage_opened)>=2?'<div data-teacher-main-tab="2" class="teacher-quiz-workspace">'+teacherQuizHtml(quizData,s.current_stage)+'</div>':'')+
+     (Number(s.max_stage_opened)>=3?'<div data-teacher-main-tab="3" class="teacher-conclusions-workspace">'+teacherGroupWorkHtml(groupWorkData)+'</div>':'')+
      '<div class="card dashboard-summary progress-summary"><div><span>פתיחה הושלמה</span><strong>'+data.opening.submitted_count+' / '+data.student_count+'</strong></div><div><span>קבוצות שסיימו כיול</span><strong>'+data.groups_calibration_done+' / '+s.group_count+'</strong></div><div><span>שלב כיתתי</span><strong>'+stageNames[s.current_stage]+'</strong></div></div>'+
      '<section class="card groups-progress-card"><div class="section-title-row"><div><span class="student-kicker">בסוף · התקדמות הכיתה</span><h2>התקדמות הקבוצות</h2></div><p>כאן רואים מה כל קבוצה כבר ביצעה — לא מי מחובר.</p></div><div class="groups-progress-grid">'+groupCards+'</div></section>'+
    '</main>'+
  '</div>',
  "teacher-dashboard-shell "+(s.current_stage===0?"teacher-opening-shell":"")
  );
- applyTeacherExperimentTab();
+ applyTeacherWorkspaceTab();
  clearTimeout(window.__brixTimer);
  window.__brixTimer=setTimeout(()=>{if(location.hash.startsWith("#dashboard")) dashboard();},5000);
 }
