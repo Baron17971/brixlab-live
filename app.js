@@ -135,11 +135,11 @@ async function studentQuiz(){
     const answered=qs.my_answer||"";
     const revealed=phase==="revealed";
     const options=Object.entries(item.options).map(([k,v])=>{
-      const cls=["quiz-option",answered===k?"my-answer":"",revealed&&k===item.correct?"correct-answer":"",revealed&&answered===k&&k!==item.correct?"wrong-answer":""].filter(Boolean).join(" ");
+      const cls=["quiz-option","quiz-option-"+k.toLowerCase(),answered===k?"my-answer":"",revealed&&k===item.correct?"correct-answer":"",revealed&&answered===k&&k!==item.correct?"wrong-answer":""].filter(Boolean).join(" ");
       const disabled=answered||phase!=="answering"?"disabled":"";
       return '<button class="'+cls+'" '+disabled+' onclick="submitQuizAnswer('+n+',\''+k+'\')"><b>'+k+'</b><span>'+esc(v)+'</span></button>';
     }).join("");
-    body='<div class="quiz-question-head"><span class="student-kicker">שאלה '+n+' מתוך 10 · מענה אישי</span><h1>'+esc(item.q)+'</h1></div><div class="quiz-options">'+options+'</div>'+
+    body='<div class="student-trivia-top"><div><span class="student-kicker">Brix Quiz · שאלה '+n+' מתוך 10</span><h1>'+esc(item.q)+'</h1></div><div class="student-trivia-badge">'+n+' / 10</div></div><div class="student-trivia-progress"><i style="width:'+(n*10)+'%"></i></div><div class="quiz-options">'+options+'</div>'+
       (answered&&!revealed?'<div class="quiz-sent">התשובה נשלחה ✓<span>ממתינים לחשיפת התשובה ולדיון הכיתתי.</span></div>':'')+
       (revealed?'<div class="quiz-reveal '+(answered===item.correct?'good':'review')+'"><strong>'+(answered===item.correct?'ענית נכון ✓':'כדאי לעבור שוב על הרעיון')+'</strong><p>'+esc(item.note)+'</p></div>':'');
   }
@@ -215,14 +215,36 @@ async function controlQuiz(question,phase){
   try{await api("quiz_control",{session_id:t.session_id,teacher_token:t.teacher_token,question,phase});dashboard()}catch(e){}
 }
 
+function projectionTriviaOptionsHtml(item,current,phase){
+  const keys=["A","B","C","D"];
+  const answered=Number(current?.answered||0);
+  return '<div class="projection-trivia-options">'+keys.map(k=>{
+    const count=Number(current?.[k]||0);
+    const pct=answered?Math.round(count/answered*100):0;
+    const revealed=phase==="revealed";
+    const correct=revealed&&k===item.correct;
+    return '<div class="projection-trivia-option trivia-option-'+k.toLowerCase()+' '+(correct?'is-correct':'')+'">'+
+      '<div class="trivia-letter">'+k+'</div>'+
+      '<strong>'+esc(item.options[k])+'</strong>'+
+      (revealed?'<div class="projection-trivia-count"><b>'+count+'</b><span>'+pct+'%</span></div>':'')+
+      (correct?'<div class="trivia-correct-mark">✓</div>':'')+
+    '</div>';
+  }).join('')+'</div>';
+}
+
 function projectionQuizHtml(qd){
   if(!qd || !qd.question || qd.phase==="closed" || qd.phase==="finished")return "";
   const item=quizQuestion(qd.question), cur=qd.current||{}, total=Number(qd.student_count||0);
-  const head='<div class="section-title-row"><div><span class="student-kicker">בדיקת ידע · שאלה '+qd.question+' מתוך 10</span><h2>'+esc(item.q)+'</h2></div><strong>'+Number(cur.answered||0)+' / '+total+' ענו</strong></div>';
+  const answered=Number(cur.answered||0);
+  const head='<div class="projection-trivia-head"><div><span class="student-kicker">Brix Quiz · שאלה '+qd.question+' מתוך 10</span><h2>'+esc(item.q)+'</h2></div><div class="projection-trivia-status"><strong>'+answered+' / '+total+'</strong><span>ענו</span></div></div><div class="trivia-progress projection-trivia-progress"><i style="width:'+(qd.question*10)+'%"></i></div>';
   if(qd.phase==="answering"){
-    return '<section id="projection-quiz" class="projection-section card projection-quiz-card">'+head+'<div class="quiz-projection-wait"><strong>חושבים ועונים באופן אישי</strong><span>ההתפלגות תיחשף רק אחרי סגירת המענה, כדי לא להשפיע על התשובות.</span></div></section>';
+    return '<section id="projection-quiz" class="projection-section card projection-quiz-card projection-trivia-card">'+head+
+      projectionTriviaOptionsHtml(item,cur,"answering")+
+      '<div class="quiz-projection-wait"><strong>חושבים ועונים באופן אישי</strong><span>הכמויות נשארות מוסתרות עד שהמורה סוגרת את המענה.</span></div></section>';
   }
-  return '<section id="projection-quiz" class="projection-section card projection-quiz-card">'+head+quizDistributionHtml(cur,item,total,true)+'<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div></section>';
+  return '<section id="projection-quiz" class="projection-section card projection-quiz-card projection-trivia-card">'+head+
+    projectionTriviaOptionsHtml(item,cur,"revealed")+
+    '<div class="teacher-quiz-explanation projection-answer-reveal"><strong>התשובה הנכונה: '+item.correct+' · '+esc(item.options[item.correct])+'</strong><p>'+esc(item.note)+'</p></div></section>';
 }
 
 function groupWorkFieldsMap(state){
