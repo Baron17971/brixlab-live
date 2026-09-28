@@ -120,7 +120,15 @@ async function studentQuiz(){
   const n=Number(qs.question||0), item=quizQuestion(n), phase=qs.phase||"closed";
   let body="";
   if(phase==="finished"){
-    body='<div class="quiz-finished"><div class="done-mark">✓</div><h1>סיימנו את בדיקת הידע</h1><p>התשובות האישיות נשמרו. ממתינים להמשך מהמורה.</p></div>';
+    const answerMap=Object.fromEntries((qs.my_answers||[]).map(a=>[Number(a.question),a.answer_key]));
+    let correctCount=0;
+    const reviewRows=Array.from({length:10},(_,idx)=>{
+      const qn=idx+1, q=quizQuestion(qn), mine=answerMap[qn]||"";
+      const isCorrect=!!mine && mine===q.correct;
+      if(isCorrect)correctCount++;
+      return '<div class="quiz-review-row '+(isCorrect?'good':'review')+'"><div class="quiz-review-num">'+qn+'</div><div class="quiz-review-copy"><strong>'+esc(q.q)+'</strong><span>התשובה שלך: '+(mine?mine+' · '+esc(q.options[mine]):'לא נענתה')+'</span><small>התשובה הנכונה: '+q.correct+' · '+esc(q.options[q.correct])+'</small></div><div class="quiz-review-mark">'+(isCorrect?'✓':'•')+'</div></div>';
+    }).join("");
+    body='<div class="quiz-finished"><div class="done-mark">✓</div><h1>סיימנו את בדיקת הידע</h1><p>התשובות האישיות נשמרו. אפשר לחזור לכל שלב שכבר נפתח.</p><div class="quiz-personal-score"><strong>'+correctCount+' / 10</strong><span>תשובות נכונות</span></div><div class="quiz-personal-review">'+reviewRows+'</div></div>';
   }else if(!item || phase==="closed"){
     body='<div class="quiz-wait"><span class="student-kicker">בדיקת ידע אישית</span><h1>ממתינים לשאלה הבאה</h1><p>המורה שולטת בקצב. כשהשאלה תיפתח היא תופיע כאן אוטומטית.</p><div class="wait-pulse"><span></span><span></span><span></span></div></div>';
   }else{
@@ -137,7 +145,7 @@ async function studentQuiz(){
   }
   shell('<div class="student-lab-shell quiz-student-shell"><div class="student-lab-top">'+brand()+'</div>'+lessonProgress(studentUnlockedThrough(2),2,true)+'<main class="quiz-main card">'+body+'</main></div>');
   clearTimeout(window.__studentTimer);
-  window.__studentTimer=setTimeout(()=>{if(location.hash.startsWith("#student-room"))studentQuiz()},2200);
+  window.__studentTimer=setTimeout(()=>{if(location.hash.startsWith("#student-room")&&document.querySelector(".quiz-student-shell"))studentQuiz()},2200);
 }
 
 async function submitQuizAnswer(question,answerKey){
@@ -237,6 +245,7 @@ async function saveGroupWorkField(section,key,value){
 }
 
 async function studentGroupWrap(renderFn){
+  clearTimeout(window.__studentTimer);
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let gs;
@@ -362,6 +371,7 @@ async function studentRoom(){
 }
 
 async function showStudentExperiment(){
+  clearTimeout(window.__studentTimer);
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
@@ -382,6 +392,7 @@ async function showStudentExperiment(){
 }
 
 async function showStudentOpeningReview(){
+  clearTimeout(window.__studentTimer);
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
