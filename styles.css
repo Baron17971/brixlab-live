@@ -4263,3 +4263,148 @@ button{cursor:pointer}
   cursor:default;
   opacity:.5;
 }
+
+/* Teacher experiment workspace: one result area, five navigable experiment parts */
+.teacher-experiment-workspace{
+  display:grid;
+  gap:14px;
+  min-width:0;
+}
+.teacher-experiment-tabs{
+  position:sticky;
+  top:8px;
+  z-index:18;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  padding:8px;
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--line);
+  box-shadow:0 10px 30px rgba(16,55,70,.08);
+  backdrop-filter:blur(10px);
+}
+.teacher-experiment-tabs button{
+  min-width:0;
+  border:1px solid #dbe8e9;
+  border-radius:14px;
+  background:#f4f9f9;
+  color:var(--navy);
+  padding:10px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font:inherit;
+  font-weight:900;
+}
+.teacher-experiment-tabs button span{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#e4f3f2;
+  flex:0 0 auto;
+  font-size:12px;
+}
+.teacher-experiment-tabs button.active{
+  background:var(--navy);
+  color:#fff;
+  border-color:var(--navy);
+}
+.teacher-experiment-tabs button.active span{
+  background:#fff;
+  color:var(--navy);
+}
+.teacher-experiment-tabs button.locked{
+  opacity:.42;
+  cursor:default;
+}
+.teacher-exp-panel{
+  min-width:0;
+}
+.teacher-exp-panel[hidden]{
+  display:none !important;
+}
+.teacher-zero-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:14px;
+}
+.teacher-zero-grid article{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  background:#fff;
+}
+.teacher-zero-grid article.done{
+  background:#f2fbf6;
+  border-color:#cfe7d8;
+}
+.teacher-zero-grid article.pending{
+  background:#fafcfc;
+}
+.teacher-zero-grid h3{
+  margin:0 0 5px;
+  color:var(--navy);
+}
+.teacher-zero-grid span{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+}
+.teacher-zero-grid b{
+  color:var(--navy);
+  text-align:left;
+  white-space:nowrap;
+}
+.teacher-sample-compare .teacher-summary-sample-graph{
+  margin-top:0;
+}
+
+@media(min-width:1100px){
+  .teacher-main{
+    min-width:0;
+  }
+  .teacher-experiment-workspace{
+    width:100%;
+  }
+  .teacher-exp-panel{
+    width:100%;
+    padding:28px 32px;
+  }
+  .teacher-experiment-tabs button{
+    min-height:54px;
+  }
+}
+
+@media(max-width:850px){
+  .teacher-experiment-tabs{
+    position:static;
+    display:flex;
+    overflow-x:auto;
+    gap:7px;
+    padding:7px;
+    scrollbar-width:thin;
+  }
+  .teacher-experiment-tabs button{
+    flex:0 0 145px;
+    min-height:48px;
+    font-size:11px;
+    padding:8px 7px;
+  }
+  .teacher-zero-grid{
+    grid-template-columns:1fr;
+  }
+  .teacher-zero-grid article{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
