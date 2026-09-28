@@ -4241,3 +4241,25 @@ button{cursor:pointer}
 .review-calibration-graph{margin-top:18px}
 .review-equation-card{margin-top:18px}
 .experiment-model-back{width:100%;margin:0 0 14px}
+
+.student-exp-step{
+  border:0;
+  background:transparent;
+  padding:0;
+  font:inherit;
+}
+.student-exp-step.clickable{
+  cursor:pointer;
+}
+.student-exp-step.clickable:hover span{
+  transform:translateY(-1px);
+}
+.student-exp-step.clickable:focus-visible{
+  outline:2px solid #1b8f87;
+  outline-offset:5px;
+  border-radius:14px;
+}
+.student-exp-step.locked{
+  cursor:default;
+  opacity:.5;
+}
