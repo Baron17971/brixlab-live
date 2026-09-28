@@ -4236,3 +4236,8 @@ button{cursor:pointer}
   .quiz-review-copy span{font-size:12px}
   .quiz-review-copy small{font-size:11px}
 }
+
+.experiment-review-card{max-width:980px;margin:0 auto}
+.review-calibration-graph{margin-top:18px}
+.review-equation-card{margin-top:18px}
+.experiment-model-back{width:100%;margin:0 0 14px}
