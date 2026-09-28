@@ -4970,3 +4970,37 @@ button{cursor:pointer}
   .projection-trivia-option{grid-template-columns:48px 1fr auto;min-height:92px;padding:14px}
   .projection-trivia-option .trivia-correct-mark{grid-column:auto}
 }
+
+/* Keep the teacher dashboard background image persistent on mobile across all stages */
+@media(max-width:850px){
+  .teacher-dashboard-shell{
+    min-height:100dvh !important;
+    background:
+      linear-gradient(180deg,rgba(238,247,248,.12),rgba(255,249,239,.18)),
+      url("/public/screens/bg-mobile.png") center top / cover fixed no-repeat !important;
+    background-attachment:fixed !important;
+  }
+
+  .teacher-dashboard-shell .teacher-dashboard,
+  .teacher-dashboard-shell .teacher-main,
+  .teacher-dashboard-shell .teacher-side{
+    background:transparent !important;
+  }
+
+  .teacher-dashboard-shell .topbar,
+  .teacher-dashboard-shell .card,
+  .teacher-dashboard-shell .teacher-workspace-tabs,
+  .teacher-dashboard-shell .teacher-experiment-tabs{
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  }
+
+  .teacher-dashboard-shell .card{
+    background:rgba(255,255,255,.88);
+  }
+
+  .teacher-dashboard-shell .teacher-workspace-tabs,
+  .teacher-dashboard-shell .teacher-experiment-tabs{
+    background:rgba(255,255,255,.92);
+  }
+}
