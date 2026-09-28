@@ -175,6 +175,13 @@ function teacherTriviaOptionsHtml(cur,item,phase){
   }).join('')+'</div>';
 }
 
+window.__teacherQuizPreviewQuestion=window.__teacherQuizPreviewQuestion||null;
+
+function setTeacherQuizPreview(question){
+  window.__teacherQuizPreviewQuestion=question?Number(question):null;
+  dashboard();
+}
+
 function teacherQuizHtml(qd,currentStage=2){
   if(!qd){
     return '<section class="card teacher-quiz-card teacher-trivia-card trivia-start-card"><div class="trivia-start-icon">?</div><span class="student-kicker">שלב 3 · Brix Quiz</span><h2>בדיקת הידע מוכנה</h2><p>פתחו את השלב לכיתה והתחילו בשאלה הראשונה.</p><div class="teacher-trivia-actions"><button class="btn quiz-project-btn" onclick="projectQuizNow()">תצוגת הקרנה</button><button class="btn primary trivia-start-btn" onclick="startTeacherQuiz()">פתיחת בדיקת הידע ושאלה 1</button></div></section>';
@@ -182,12 +189,25 @@ function teacherQuizHtml(qd,currentStage=2){
   const n=Number(qd.question||0), phase=qd.phase||"closed", item=quizQuestion(n), total=Number(qd.student_count||0), cur=qd.current||{};
   const projectBtn='<button class="btn quiz-project-btn" onclick="projectQuizNow()">הקרנה לכיתה</button>';
 
+  if(phase==="finished" && window.__teacherQuizPreviewQuestion){
+    const previewN=Number(window.__teacherQuizPreviewQuestion);
+    const previewItem=quizQuestion(previewN);
+    const previewCur=(qd.summary||[]).find(r=>Number(r.question)===previewN)||{};
+    return '<section class="card teacher-quiz-card teacher-trivia-card teacher-quiz-preview">'+
+      '<div class="trivia-game-header"><div><span class="student-kicker">תצוגת חידון · שאלה '+previewN+' מתוך 10</span><h2>'+esc(previewItem.q)+'</h2></div><div class="trivia-game-badge">'+previewN+' / 10</div></div>'+
+      '<div class="trivia-progress"><i style="width:'+(previewN*10)+'%"></i></div>'+
+      teacherTriviaOptionsHtml(previewCur,previewItem,"revealed")+
+      '<div class="teacher-quiz-explanation"><strong>התשובה הנכונה: '+previewItem.correct+' · '+esc(previewItem.options[previewItem.correct])+'</strong><p>'+esc(previewItem.note)+'</p></div>'+
+      '<div class="teacher-trivia-actions"><button class="btn ghost" onclick="setTeacherQuizPreview(null)">חזרה לסיכום החידון</button>'+(previewN<10?'<button class="btn primary" onclick="setTeacherQuizPreview('+(previewN+1)+')">שאלה הבאה</button>':'')+'</div>'+
+    '</section>';
+  }
+
   if(phase==="finished"){
     const rows=(qd.summary||[]).map(r=>{
       const q=quizQuestion(r.question), correct=Number(r[q.correct]||0), answered=Number(r.answered||0), pct=answered?Math.round(correct/answered*100):0;
       return '<div class="quiz-summary-row"><span>שאלה '+r.question+'</span><div><i style="width:'+pct+'%"></i></div><strong>'+correct+' / '+answered+' נכון</strong></div>';
     }).join("");
-    return '<section class="card teacher-quiz-card teacher-trivia-card quiz-finished-teacher"><div class="trivia-game-header"><div><span class="student-kicker">Brix Quiz · הושלם</span><h2>תמונת מצב כיתתית</h2></div><div class="trivia-game-badge">10 / 10</div></div><div class="quiz-summary-list">'+rows+'</div><div class="teacher-trivia-actions">'+projectBtn+'<button class="btn primary" onclick="setStage(3)">פתיחת מסקנות וחקר</button></div></section>';
+    return '<section class="card teacher-quiz-card teacher-trivia-card quiz-finished-teacher"><div class="trivia-game-header"><div><span class="student-kicker">Brix Quiz · הושלם</span><h2>תמונת מצב כיתתית</h2></div><div class="trivia-game-badge">10 / 10</div></div><div class="quiz-summary-list">'+rows+'</div><div class="teacher-trivia-actions"><button class="btn ghost" onclick="setTeacherQuizPreview(1)">תצוגת החידון</button>'+projectBtn+'<button class="btn primary" onclick="setStage(3)">פתיחת מסקנות וחקר</button></div></section>';
   }
 
   if(!item){
@@ -1214,19 +1234,17 @@ window.__teacherExperimentTab=window.__teacherExperimentTab||1;
 
 function teacherExperimentTabs(data){
   const groups=data?.groups||[];
-  const anyZero=groups.some(g=>Number(g.max_experiment_step||0)>=2);
-  const anyCalibration=(data?.calibration_summary||[]).some(r=>Number(r.reported_groups||0)>0);
-  const anyModel=teacherCalibrationPoints(data).length>=2;
-  const anySamples=groups.some(g=>(g.samples||[]).length>0);
-  const comparable=(data?.sample_aggregate||[]).some(x=>x.comparable);
-  const unlocked=[true,anyZero||anyCalibration,anyCalibration||anyModel,anySamples,comparable||anySamples];
-  if(!unlocked[window.__teacherExperimentTab-1]){
-    window.__teacherExperimentTab=Math.max(1,unlocked.reduce((last,v,i)=>v?i+1:last,1));
-  }
+  const ready=[
+    true,
+    groups.some(g=>Number(g.max_experiment_step||0)>=2)||(data?.calibration_summary||[]).some(r=>Number(r.reported_groups||0)>0),
+    teacherCalibrationPoints(data).length>=2,
+    groups.some(g=>(g.samples||[]).length>0),
+    (data?.sample_aggregate||[]).some(x=>x.comparable)
+  ];
   const labels=["מכירים את המכשיר","מדידות כיול","בונים מודל","בודקים דגימות","משווים תוצאות"];
   return '<div class="teacher-experiment-tabs" role="tablist" aria-label="חלקי הניסוי">'+labels.map((label,i)=>{
-    const part=i+1, open=unlocked[i], active=window.__teacherExperimentTab===part;
-    return '<button type="button" class="exp-color-'+part+' '+(active?'active ':'')+(open?'open':'locked')+'" '+(open?'onclick="setTeacherExperimentTab('+part+')"':'disabled')+'><span>'+part+'</span><b>'+label+'</b></button>';
+    const part=i+1, active=window.__teacherExperimentTab===part;
+    return '<button type="button" class="exp-color-'+part+' '+(active?'active ':'')+(ready[i]?'open':'preview')+'" onclick="setTeacherExperimentTab('+part+')"><span>'+part+'</span><b>'+label+'</b><small>'+(ready[i]?'יש נתונים':'תצוגת מורה')+'</small></button>';
   }).join('')+'</div>';
 }
 
