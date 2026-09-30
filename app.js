@@ -7,6 +7,9 @@ async function api(action,payload={}){
   if(!r.ok) throw new Error(j.error||"request_failed");
   return j.data;
 }
+function studentAuth(s){
+  return {student_id:s?.student_id||"",student_token:s?.student_token||""};
+}
 function shell(content,cls=""){root.innerHTML='<div class="shell '+cls+'">'+content+'</div>'}
 function brand(){return '<div class="brand brand-image"><img src="/public/screens/brix-logo.png" alt="BrixLab - מתוק ומדויק"></div>'}
 function go(view){location.hash=view}
@@ -23,14 +26,14 @@ function saveStudentDraftPatch(patch,delay=300){
   const key=Object.keys(patch).sort().join("|")||"draft";
   clearTimeout(window.__brixDraftTimers[key]);
   window.__brixDraftTimers[key]=setTimeout(()=>{
-    api("save_student_draft",{student_id:s.student_id,patch}).catch(()=>{});
+    api("save_student_draft",{...studentAuth(s),patch}).catch(()=>{});
   },delay);
 }
 function saveDraftNow(patch){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return Promise.resolve();
   window.__brixDraft={...(window.__brixDraft||{}),...patch};
-  return api("save_student_draft",{student_id:s.student_id,patch}).catch(()=>null);
+  return api("save_student_draft",{...studentAuth(s),patch}).catch(()=>null);
 }
 function mergeNestedDraft(key,patch,delay=300){
   const next={...((window.__brixDraft||{})[key]||{}),...patch};
@@ -116,7 +119,7 @@ async function studentQuiz(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let qs;
-  try{qs=await api("quiz_state",{student_id:s.student_id})}catch(e){return}
+  try{qs=await api("quiz_state",{...studentAuth(s)})}catch(e){return}
   const n=Number(qs.question||0), item=quizQuestion(n), phase=qs.phase||"closed";
   let body="";
   if(phase==="finished"){
@@ -152,7 +155,7 @@ async function submitQuizAnswer(question,answerKey){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   document.querySelectorAll(".quiz-option").forEach(b=>b.disabled=true);
-  try{await api("quiz_submit",{student_id:s.student_id,question,answer_key:answerKey})}catch(e){}
+  try{await api("quiz_submit",{...studentAuth(s),question,answer_key:answerKey})}catch(e){}
   studentQuiz();
 }
 
@@ -299,7 +302,7 @@ async function saveGroupWorkField(section,key,value){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   try{
-    await api("group_work_save",{student_id:s.student_id,section,field_key:key,field_value:value});
+    await api("group_work_save",{...studentAuth(s),section,field_key:key,field_value:value});
   }catch(e){
     if(String(e?.message||e).includes("locked")){
       alert("חבר/ת קבוצה אחר/ת כבר שמר/ה את השדה הזה. הנתון לא נדרס.");
@@ -312,7 +315,7 @@ async function studentGroupWrap(renderFn){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let gs;
-  try{gs=await api("group_work_state",{student_id:s.student_id})}catch(e){gs={fields:[]}}
+  try{gs=await api("group_work_state",{...studentAuth(s)})}catch(e){gs={fields:[]}}
   renderFn(s,gs);
 }
 
@@ -347,7 +350,7 @@ async function showGroupWorkDone(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let gs={fields:[]};
-  try{gs=await api("group_work_state",{student_id:s.student_id})}catch(e){}
+  try{gs=await api("group_work_state",{...studentAuth(s)})}catch(e){}
   const map=Object.fromEntries((gs.fields||[]).map(f=>[f.section+":"+f.field_key,f]));
   const needed=["question","hypothesis","independent","dependent","controls","equipment","procedure","data_plan"];
   const missing=needed.filter(k=>!String(map["research_plan:"+k]?.field_value||"").trim());
@@ -384,9 +387,9 @@ async function studentRoom(){
  if(!s){go("student");return}
  let state;
  try{
-   state=await api("student_state",{student_id:s.student_id});
+   state=await api("student_state",{...studentAuth(s)});
    try{
-     const si=await api("student_stage_info",{student_id:s.student_id});
+     const si=await api("student_stage_info",{...studentAuth(s)});
      state.max_stage_opened=Number(si.max_stage_opened??state.current_stage??0);
      state.current_stage=Number(si.current_stage??state.current_stage??0);
    }catch(e){
@@ -439,13 +442,13 @@ async function showStudentExperiment(){
   if(!s)return;
   let state;
   try{
-    state=await api("student_state",{student_id:s.student_id});
+    state=await api("student_state",{...studentAuth(s)});
     window.__brixDraft=state.draft||{};
     sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
   }catch(e){return}
   let unlocked=studentUnlockedThrough(state.current_stage||0);
   try{
-    const si=await api("student_stage_info",{student_id:s.student_id});
+    const si=await api("student_stage_info",{...studentAuth(s)});
     unlocked=Number(si.max_stage_opened??unlocked);
     sessionStorage.setItem("brix_student_max_stage",String(unlocked));
   }catch(e){}
@@ -459,7 +462,7 @@ async function showStudentOpeningReview(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
-  try{state=await api("student_state",{student_id:s.student_id});window.__brixDraft=state.draft||{}}catch(e){return}
+  try{state=await api("student_state",{...studentAuth(s)});window.__brixDraft=state.draft||{}}catch(e){return}
   sessionStorage.setItem("brix_student_stage",String(state.current_stage||0));
   const a=state.opening_answer||{};
   const labels={daily:"פעם ביום",weekly:"פעם בשבוע",events:"רק באירועים מיוחדים",never:"לא שותה ממותק"};
@@ -510,7 +513,7 @@ async function submitOpening(){
  saveStudentDraftPatch({opening:{survey_option:survey,guesses}},0);
  msg.innerHTML='<div class="inline-error neutral">שולח...</div>';
  try{
-   await api("submit_opening",{student_id:s.student_id,survey_option:survey,guesses});
+   await api("submit_opening",{...studentAuth(s),survey_option:survey,guesses});
    studentRoom();
  }catch(e){
    msg.innerHTML='<div class="inline-error">לא הצלחנו לשמור. נסו שוב.</div>';
@@ -550,7 +553,7 @@ async function showExperimentPart(part){
   if(!s)return;
   let state;
   try{
-    state=await api("student_state",{student_id:s.student_id});
+    state=await api("student_state",{...studentAuth(s)});
     window.__brixDraft=state.draft||window.__brixDraft||{};
     window.__brixModelState=state;
     window.__brixSampleState=state;
@@ -598,9 +601,9 @@ async function startBrixPractice(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
-  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state={experiment_step:1,current_stage:1,calibration:[],samples:[]}}
+  try{state=await api("student_state",{...studentAuth(s)})}catch(e){state={experiment_step:1,current_stage:1,calibration:[],samples:[]}}
   if(Number(state.experiment_step||0)<1){
-    try{await api("update_student_progress",{student_id:s.student_id,experiment_step:1});state.experiment_step=1;}catch(e){}
+    try{await api("update_student_progress",{...studentAuth(s),experiment_step:1});state.experiment_step=1;}catch(e){}
   }
   renderBrixPractice(s,state);
 }
@@ -630,9 +633,9 @@ async function finishBrixPractice(score){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
-  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state={experiment_step:2,current_stage:Number(sessionStorage.getItem("brix_student_stage")||1),calibration:[],samples:[]}}
+  try{state=await api("student_state",{...studentAuth(s)})}catch(e){state={experiment_step:2,current_stage:Number(sessionStorage.getItem("brix_student_stage")||1),calibration:[],samples:[]}}
   if(Number(state.experiment_step||0)<2){
-    try{await api("update_student_progress",{student_id:s.student_id,experiment_step:2,practice_score:score});state.experiment_step=2;}catch(e){}
+    try{await api("update_student_progress",{...studentAuth(s),experiment_step:2,practice_score:score});state.experiment_step=2;}catch(e){}
   }
   renderCalibration(s,state);
 }
@@ -746,8 +749,8 @@ async function saveCalibration(){
 
   msg.innerHTML='<div class="inline-error neutral">'+(myMeasurements.length?'שומר את המדידות שהזנת...':'כל המדידות כבר נשמרו על ידי הקבוצה.')+'</div>';
   try{
-    if(myMeasurements.length) await api("save_calibration",{student_id:s.student_id,measurements:myMeasurements});
-    let fresh=await api("student_state",{student_id:s.student_id});
+    if(myMeasurements.length) await api("save_calibration",{...studentAuth(s),measurements:myMeasurements});
+    let fresh=await api("student_state",{...studentAuth(s)});
     window.__brixCalibrationState=fresh;
     renderCalibrationDone(s,fresh);
   }catch(e){
@@ -903,7 +906,7 @@ function showCalibrationPoints(){
 }
 async function refreshModelState(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
-  try{window.__brixModelState=await api("student_state",{student_id:s.student_id});showCalibrationPoints()}catch(e){}
+  try{window.__brixModelState=await api("student_state",{...studentAuth(s)});showCalibrationPoints()}catch(e){}
 }
 function patternAnswer(btn,correct){
   saveStudentDraftPatch({pattern_answer:{label:btn.textContent.trim(),correct}});
@@ -971,9 +974,9 @@ async function startSampleStage(){
   const s=JSON.parse(localStorage.getItem("brix_student")||"null");
   if(!s)return;
   let state;
-  try{state=await api("student_state",{student_id:s.student_id})}catch(e){state=window.__brixModelState||{}}
+  try{state=await api("student_state",{...studentAuth(s)})}catch(e){state=window.__brixModelState||{}}
   if(Number(state.experiment_step||0)<4){
-    try{await api("update_student_progress",{student_id:s.student_id,experiment_step:4,practice_score:0});state.experiment_step=4;}catch(e){}
+    try{await api("update_student_progress",{...studentAuth(s),experiment_step:4,practice_score:0});state.experiment_step=4;}catch(e){}
   }
   renderSampleStage(s,state);
 }
@@ -1152,8 +1155,8 @@ async function saveSamples(){
 
   msg.innerHTML='<div class="inline-error neutral">שומר את הדגימות שהזנת...</div>';
   try{
-    await api("save_samples",{student_id:s.student_id,samples});
-    const fresh=await api("student_state",{student_id:s.student_id});
+    await api("save_samples",{...studentAuth(s),samples});
+    const fresh=await api("student_state",{...studentAuth(s)});
     window.__brixSampleState=fresh;
     renderSampleSummary(s,fresh);
   }catch(e){
